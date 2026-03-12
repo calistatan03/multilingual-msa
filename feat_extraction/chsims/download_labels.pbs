@@ -1,0 +1,111 @@
+#!/bin/bash
+#PBS -P chsims_labels
+#PBS -q serial
+#PBS -l select=1:ncpus=1
+#PBS -j oe
+#PBS -N chsims_labels
+
+set -eo pipefail
+cd "$PBS_O_WORKDIR" || exit 1
+
+mkdir -p data
+
+module purge || true
+module load anaconda3
+
+# prevent module python contamination
+unset PYTHONHOME
+unset PYTHONPATH
+
+# activate your conda env (create it interactively beforehand)
+# IMPORTANT: on your cluster, it's "source activate", not "conda activate"
+source /app1/anaconda/3/bin/activate chsims-dl
+
+# ---- CHANGE THIS ----
+LABEL_URL="https://drive.google.com/file/d/1R0WUJui1utRBi-gtJK-2MxGiZrwKcDmv/view?usp=drive_link"
+# ---------------------
+
+RAW="data/label_raw.csv"
+OUT="data/label.csv"
+
+echo "[info] downloading labels -> ${RAW}"
+# --fuzzy handles "view?usp=..." links cleanly
+gdown --fuzzy "$LABEL_URL" -O "$RAW"
+
+echo "[info] converting TSV(no-header) -> CSV(with header) -> ${OUT}"
+python - <<'PY'
+import csv, os, sys
+
+inp = "data/label_raw.csv"
+out = "data/label.csv"
+cols = ["video_id","clip_id","text","label","label_T","label_A","label_V","annotation","mode"]
+
+if not os.path.exists(inp):
+    print(f"[error] missing input: {inp}", file=sys.stderr)
+    sys.exit(2)
+
+# Detect delimiter by looking at the first non-empty line
+with open(inp, "r", encoding="utf-8", newline="") as f:
+    first = ""
+    for line in f:
+        if line.strip():
+            first = line
+            break
+
+if not first:
+    print("[error] label_raw.csv is empty", file=sys.stderr)
+    sys.exit(3)
+
+delim = "\t" if first.count("\t") >= first.count(",") else ","
+print(f"[info] detected delimiter: {repr(delim)}")
+
+with open(inp, "r", encoding="utf-8", newline="") as f_in, \
+     open(out, "w", encoding="utf-8", newline="") as f_out:
+    reader = csv.reader(f_in, delimiter=delim)
+    writer = csv.writer(f_out)
+    writer.writerow(cols)
+
+    for row in reader:
+        if not row or (len(row) == 1 and not row[0].strip()):
+            continue
+
+        # If row is accidentally a single field that still contains commas/tabs,
+        # split once more defensively.
+        if len(row) == 1:
+            s = row[0]
+            if delim == "," and "\t" in s:
+                row = s.split("\t")
+            elif delim == "\t" and "," in s:
+                row = s.split(",")
+
+        # pad/truncate to exactly 9 columns
+        row = (row + [""] * len(cols))[:len(cols)]
+        writer.writerow(row)
+
+print("[done] wrote", out)
+PY
+
+echo "[info] preview:"
+head -n 2 "$OUT" || true
+
+echo "[info] sanity check (row width should be 9):"
+python - <<'PY'
+import csv
+path="data/label.csv"
+bad=0
+with open(path, "r", encoding="utf-8", newline="") as f:
+    r=csv.reader(f)
+    header=next(r)
+    for i,row in enumerate(r, start=2):
+        if len(row)!=9:
+            bad+=1
+            if bad<=5:
+                print("bad line", i, "len", len(row), row[:3])
+print("bad lines:", bad)
+PY
+
+# optional: remove raw file after successful conversion
+rm -f "$RAW" || true
+
+exit 0
+

@@ -1,0 +1,102 @@
+#!/bin/bash
+#PBS -P mosei_msa_fet
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=240gb
+#PBS -j oe
+#PBS -N msa_fet
+
+set -euo pipefail
+
+# ---- paths ----
+PROJECT_DIR="/home/svu/e0968015/feat_extraction/mosei"
+DATASET_DIR="/hpctmp/scratch/e0968015/mosei"
+OUT_DIR="${DATASET_DIR}/Processed"
+OUT_FILE="${OUT_DIR}/features_full_35.pkl"
+CONFIG="${PROJECT_DIR}/mosei_fet.json"
+
+mkdir -p "${PROJECT_DIR}/logs"
+mkdir -p "${OUT_DIR}"
+
+cd "${PROJECT_DIR}"
+LOG_DIR="${PROJECT_DIR}/logs"
+mkdir -p "${LOG_DIR}"
+
+RUN_LOG="${LOG_DIR}/run.${PBS_JOBID:-manual}.$(date +%Y%m%d_%H%M%S).log"
+
+# stream both stdout+stderr to console AND to RUN_LOG (line-buffered)
+exec > >(stdbuf -oL -eL tee -a "${RUN_LOG}") 2>&1
+
+echo "[info] Job ID: ${PBS_JOBID}"
+echo "[info] Host: $(hostname)"
+echo "[info] Project dir: ${PROJECT_DIR}"
+echo "[info] Dataset dir: ${DATASET_DIR}"
+echo "[info] Config: ${CONFIG}"
+echo "[info] Output: ${OUT_FILE}"
+
+module purge
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# ---- conda ----
+set +u
+source activate msa-fet
+set -u
+
+echo "[info] python: $(which python)"
+python -V
+
+# quick import smoke test (fails fast if deps missing)
+python -c "import MSA_FET; print('[info] MSA_FET import ok')"
+
+# ---- keep caches off /home to avoid quota issues ----
+export HF_HOME="/hpctmp/scratch/e0968015/hf_home"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TORCH_HOME="${HF_HOME}/torch"
+mkdir -p "$TRANSFORMERS_CACHE" "$HF_DATASETS_CACHE" "$TORCH_HOME"
+
+export MMSA_FET_HOME="/hpctmp/scratch/e0968015/.MMSA-FET"
+export TMPDIR="${MMSA_FET_HOME}/tmp"
+mkdir -p "${MMSA_FET_HOME}/tmp" "${MMSA_FET_HOME}/log"
+
+
+# ---- (optional) quick sanity checks ----
+python - <<'PY'
+import os
+DATASET_DIR = "/hpctmp/scratch/e0968015/mosei"
+assert os.path.exists(os.path.join(DATASET_DIR, "label.csv")), "Missing label.csv in hpctmp dataset dir"
+assert os.path.isdir(os.path.join(DATASET_DIR, "Raw")), "Missing Raw/ in hpctmp dataset dir"
+print("[ok] dataset structure looks good:", DATASET_DIR)
+PY
+
+# ---- run feature extraction (inline, using hpctmp paths) ----
+python - <<'PY'
+import os
+from MSA_FET import FeatureExtractionTool
+
+PROJECT_DIR = "/home/svu/e0968015/feat_extraction/mosei"
+DATASET_DIR = "/hpctmp/scratch/e0968015/mosei"
+CONFIG = os.path.join(PROJECT_DIR, "mosei_fet.json")
+
+OUT_FILE = os.path.join(DATASET_DIR, "Processed", "features_full_35.pkl")
+os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
+
+# sanity checks
+assert os.path.exists(os.path.join(DATASET_DIR, "label.csv")), "Missing label.csv"
+assert os.path.isdir(os.path.join(DATASET_DIR, "Raw")), "Missing Raw/"
+
+fet = FeatureExtractionTool(CONFIG)
+fet.run_dataset(
+    dataset_dir=DATASET_DIR,
+    out_file=OUT_FILE,
+    num_workers=1
+
+)
+
+print(f"[done] Saved features to {OUT_FILE}")
+PY
+
+echo "[done] PBS job completed successfully."
+

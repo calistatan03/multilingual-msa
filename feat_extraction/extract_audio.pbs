@@ -1,0 +1,41 @@
+#!/bin/bash
+#PBS -P chsims_extract_audio
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=60gb
+#PBS -j oe
+#PBS -N chsims_extract_audio
+
+set -euo pipefail
+
+# ---- paths ----
+PROJECT_DIR="/home/svu/e0968015/feat_extraction/"
+
+mkdir -p "${PROJECT_DIR}/logs"
+
+cd "${PROJECT_DIR}"
+LOG_DIR="${PROJECT_DIR}/logs"
+mkdir -p "${LOG_DIR}"
+
+RUN_LOG="${LOG_DIR}/run.${PBS_JOBID:-manual}.$(date +%Y%m%d_%H%M%S).log"
+
+# stream both stdout+stderr to console AND to RUN_LOG (line-buffered)
+exec > >(stdbuf -oL -eL tee -a "${RUN_LOG}") 2>&1
+
+cd $PBS_O_WORKDIR
+
+module purge
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# ---- conda ----
+set +u
+source activate msa-fet
+set -u
+
+echo "[info] python: $(which python)"
+python -V
+
+
+python extract_audio.py

@@ -1,0 +1,66 @@
+#!/bin/bash
+#PBS -P download_mosei
+#PBS -q serial
+#PBS -l select=1:ncpus=1
+#PBS -j oe
+#PBS -N download_mosei_raw_zip
+
+set -eo pipefail
+cd "$PBS_O_WORKDIR" || exit 1
+
+mkdir -p data/mosei
+module purge || true
+
+# Where to store
+OUTDIR="$PBS_O_WORKDIR/data/mosei"
+mkdir -p "$OUTDIR"
+cd "$OUTDIR"
+
+FILE_ID="1LKsuRkO0MqfdLZIyjoBgEEQPH8napiKi"
+UUID="112ddfe2-84ca-4835-b613-32282559de92"
+
+COOKIE="gdrive_cookie.txt"
+PROBE="gdrive_probe.html"
+PART="raw.zip.part"
+FINAL="raw.zip"
+
+echo "[info] working dir: $PWD"
+echo "[info] probe -> $PROBE"
+echo "[info] download -> $PART (resume enabled)"
+
+# 1) Get cookies + probe page
+wget --quiet --save-cookies "$COOKIE" --keep-session-cookies \
+  "https://docs.google.com/uc?export=download&id=${FILE_ID}" \
+  -O "$PROBE" || true
+
+# 2) Download file (resume with -c)
+wget -c --load-cookies "$COOKIE" --keep-session-cookies \
+  --content-disposition --trust-server-names \
+  "https://drive.usercontent.google.com/download?id=${FILE_ID}&export=download&confirm=t&uuid=${UUID}" \
+  -O "$PART" || true
+
+# 3) Basic checks
+echo "[info] current size:"
+ls -lh "$PART" || true
+
+# If HTML got downloaded, fail loudly (so you notice in the .o file)
+if head -c 4096 "$PART" 2>/dev/null | grep -qi "<html"; then
+  echo "[error] Downloaded HTML instead of zip. Likely blocked/throttled by Drive." >&2
+  echo "[hint] Re-run later, or use a different network / ask owner to mirror elsewhere." >&2
+  exit 2
+fi
+
+# If it looks complete, rename to raw.zip (zip check may fail if incomplete, so we guard)
+python - <<'PY'
+import os, zipfile
+p="raw.zip.part"
+if not os.path.exists(p):
+    raise SystemExit(1)
+size=os.path.getsize(p)
+print("[py] bytes:", size)
+print("[py] is_zipfile:", zipfile.is_zipfile(p))
+PY
+
+echo "[info] If is_zipfile=True and size stops changing, you can rename:"
+echo "       mv raw.zip.part raw.zip"
+

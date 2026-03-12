@@ -1,0 +1,48 @@
+#!/bin/bash
+#PBS -P reorder_label_csv
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=160gb
+#PBS -j oe
+#PBS -N reorder_label_csv
+
+set -euo pipefail
+
+WORKDIR="/hpctmp/scratch/e0968015/mosei"
+INCSV="${WORKDIR}/label.csv"
+OUTCSV="${WORKDIR}/label_reordered.csv"
+LOGDIR="${WORKDIR}/logs"
+
+mkdir -p "$LOGDIR"
+cd "$WORKDIR"
+
+echo "[$(date)] Input : $INCSV"
+echo "[$(date)] Output: $OUTCSV"
+
+python - <<PY > "${LOGDIR}/reorder_label_csv.log" 2>&1
+import csv
+
+inp = r"$INCSV"
+out = r"$OUTCSV"
+want = ["video_id","clip_id","text","label","label_T","label_A","label_V","annotation","mode"]
+
+with open(inp, "r", encoding="utf-8") as f_in, open(out, "w", encoding="utf-8") as f_out:
+    r = csv.DictReader(f_in)
+    missing = [c for c in want if c not in (r.fieldnames or [])]
+    if missing:
+        raise SystemExit("Missing columns: %s\nFound: %s" % (missing, r.fieldnames))
+
+    w = csv.DictWriter(f_out, fieldnames=want, lineterminator="\n")
+    w.writeheader()
+    n = 0
+    for row in r:
+        w.writerow({k: row.get(k, "") for k in want})
+        n += 1
+
+print("Rows written:", n)
+print("Done. Wrote:", out)
+PY
+
+
+echo "[$(date)] Done. Log: ${LOGDIR}/reorder_label_csv.log"
+PBS
+

@@ -1,0 +1,33 @@
+JobID: 339139.venus01
+Host: cnode-33-43-21
+Start: Sat Feb  7 19:48:31 +08 2026
+Workdir: /home/svu/e0968015/feat_extraction/mosei
+
+=== CMU-MOSEI label distribution ===
+('CSV:', '/home/svu/e0968015/feat_extraction/mosei/data/label.csv')
+('Label column:', 'label')
+('Total samples:', 22856)
+('Skipped (non-numeric/empty):', 0)
+()
+Exact labels:
+  -3:    126  ( 0.55%)
+  -2:   1337  ( 5.85%)
+  -1:   2474  (10.82%)
+   0:  13201  (57.76%)
+   1:   4314  (18.87%)
+   2:   1343  ( 5.88%)
+   3:     61  ( 0.27%)
+
+Ranges:
+  [-3, -2] (strong neg)    :   1463  ( 6.40%)
+  [-1] (weak neg)          :   2474  (10.82%)
+  [0] (neutral)            :  13201  (57.76%)
+  [1] (weak pos)           :   4314  (18.87%)
+  [2, 3] (strong pos)      :   1404  ( 6.14%)
+
+Combined:
+  In [-2, +2]:  22669 (99.18%)
+  Outside    :    187 ( 0.82%)
+
+End: Sat Feb  7 19:48:31 +08 2026
+Wrote log to: logs/mosei_label_stats_339139.venus01.log

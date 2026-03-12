@@ -1,0 +1,95 @@
+#!/bin/bash
+#PBS -P mosei_stats
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=80gb
+#PBS -j oe
+#PBS -N mosei_stats
+
+cd "$PBS_O_WORKDIR" || exit 1
+
+mkdir -p logs
+LOGFILE="logs/mosei_label_stats_${PBS_JOBID}.log"
+exec > "$LOGFILE" 2>&1
+
+echo "JobID: $PBS_JOBID"
+echo "Host: $(hostname)"
+echo "Start: $(date)"
+echo "Workdir: $PWD"
+echo
+
+# ---- EDIT THESE ----
+CSV_PATH="/home/svu/e0968015/feat_extraction/mosei/data/label.csv"
+LABEL_COL="label"
+# --------------------
+
+python - <<PY
+import csv
+from collections import Counter
+
+csv_path = r"$CSV_PATH"
+label_col = r"$LABEL_COL"
+
+label_counter = Counter()
+total = 0
+skipped = 0
+
+# Python 2/3 compatible CSV reading:
+# - Python 2 expects binary mode
+# - no newline keyword
+f = open(csv_path, "rb")
+try:
+    reader = csv.DictReader(f)
+    if reader.fieldnames is None:
+        raise SystemExit("Could not read header row. Is this a valid CSV?")
+
+    if label_col not in reader.fieldnames:
+        raise SystemExit("Column '{}' not found. Columns: {}".format(label_col, reader.fieldnames))
+
+    for row in reader:
+        try:
+            y = int(float(row[label_col]))
+        except Exception:
+            skipped += 1
+            continue
+        label_counter[y] += 1
+        total += 1
+finally:
+    f.close()
+
+print("=== CMU-MOSEI label distribution ===")
+print("CSV:", csv_path)
+print("Label column:", label_col)
+print("Total samples:", total)
+print("Skipped (non-numeric/empty):", skipped)
+print()
+
+print("Exact labels:")
+for k in sorted(label_counter.keys()):
+    c = label_counter[k]
+    pct = (float(c) / total) if total else 0.0
+    print("  {:>2}: {:6d}  ({:6.2%})".format(k, c, pct))
+
+print("\nRanges:")
+ranges = [
+    ("[-3, -2] (strong neg)", [-3, -2]),
+    ("[-1] (weak neg)",       [-1]),
+    ("[0] (neutral)",         [0]),
+    ("[1] (weak pos)",        [1]),
+    ("[2, 3] (strong pos)",   [2, 3]),
+]
+for name, vals in ranges:
+    c = sum(label_counter[v] for v in vals)
+    pct = (float(c) / total) if total else 0.0
+    print("  {:25s}: {:6d}  ({:6.2%})".format(name, c, pct))
+
+print("\nCombined:")
+in_2 = sum(label_counter[v] for v in [-2, -1, 0, 1, 2])
+out_2 = total - in_2
+print("  In [-2, +2]: {:6d} ({:6.2%})".format(in_2, (float(in_2)/total) if total else 0.0))
+print("  Outside    : {:6d} ({:6.2%})".format(out_2, (float(out_2)/total) if total else 0.0))
+PY
+
+
+echo
+echo "End: $(date)"
+echo "Wrote log to: $LOGFILE"

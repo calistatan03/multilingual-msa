@@ -1,0 +1,63 @@
+[info] Job ID: 339525.venus01
+[info] Host: cnode-33-43-36
+[info] Project dir: /home/svu/e0968015/feat_extraction/mosei
+[info] Dataset dir: /hpctmp/scratch/e0968015/mosei
+[info] Config: /home/svu/e0968015/feat_extraction/mosei/mosei_fet.json
+[info] Output: /hpctmp/scratch/e0968015/mosei/Processed/features.pkl
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[info] python: /home/svu/e0968015/.conda/envs/msa-fet/bin/python
+Python 3.9.13
+[info] MSA_FET import ok
+[ok] dataset structure looks good: /hpctmp/scratch/e0968015/mosei
+MMSA-FET - 
+MMSA-FET - ========================== MMSA-FET Started ==========================
+MMSA-FET - Temporary directory: /home/svu/e0968015/.MMSA-FET/tmp
+MMSA-FET - Log file: '/home/svu/e0968015/.MMSA-FET/log/MMSA-FET.log'
+MMSA-FET - Config: {'audio': {'tool': 'librosa', 'sample_rate': 22050, 'args': {'mfcc': {'n_mfcc': 13, 'htk': True}, 'rms': {}, 'zero_crossing_rate': {}, 'spectral_centroid': {}}}, 'video': {'tool': 'mediapipe', 'fps': 10, 'multiFace': {'enable': False, 'facedetScale': 0.25, 'minTrack': 10, 'numFailedDet': 10, 'minFaceSize': 1, 'cropScale': 0.4}, 'args': {'face_mesh': {'refine_landmarks': True, 'min_detection_confidence': 0.35, 'min_tracking_confidence': 0.5}, 'holistic': {'model_complexity': 1, 'smooth_landmarks': True, 'enable_segmentation': True, 'smooth_segmentation': True, 'min_detection_confidence': 0.5, 'min_tracking_confidence': 0.5}, 'visualize': False, 'visualize_dir': '~/.MMSA-FET/visualize'}}, 'text': {'model': 'bert', 'device': 'cpu', 'pretrained': 'bert-base-uncased', 'args': {}}}
+MMSA-FET - Extracting features from 'mosei' dataset.
+MMSA-FET - Dataset directory: '/hpctmp/scratch/e0968015/mosei'
+MMSA-FET - Initializing librosa audio feature extractor.
+MMSA-FET - Initializing MediaPipe video feature extractor...
+MMSA-FET - Initializing BERT text feature extractor.
+  0%|          | 0/1 [00:00<?, ?it/s]INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+W0000 00:00:1770604012.677507   31363 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.701252   31363 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.751983   31367 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.755828   31429 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.763176   31386 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.770698   31429 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.774248   31367 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.782546   31386 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604012.975484   31385 landmark_projection_calculator.cc:186] Using NORM_RECT without IMAGE_DIMENSIONS is only supported for the square ROI. Provide IMAGE_DIMENSIONS or use PROJECTION_MATRIX.
+W0000 00:00:1770604038.406475   31737 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.428365   31737 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.438392   31813 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.449045   31827 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.454399   31827 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.459452   31813 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.461729   31737 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604038.488896   31737 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.509333   32080 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.531531   32080 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.537699   32157 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.540458   32080 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.553964   32157 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.554847   32158 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.557790   32080 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604044.560796   32081 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.735480   32470 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.777869   32470 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.783899   32461 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.800218   32408 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.805468   32408 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.806978   32406 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.811104   32461 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1770604060.823943   32406 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+100%|██████████| 1/1 [00:58<00:00, 58.89s/it]100%|██████████| 1/1 [00:58<00:00, 58.95s/it]
+MMSA-FET - Output file '/hpctmp/scratch/e0968015/mosei/Processed/features_sampled.pkl' already exists. Saving to '/hpctmp/scratch/e0968015/mosei/Processed/features_sampled_1770604065.pkl' instead.
+MMSA-FET - Feature file saved: '/hpctmp/scratch/e0968015/mosei/Processed/features_sampled_1770604065.pkl'.
+MMSA-FET - Feature extraction complete!
+[done] Saved features to /hpctmp/scratch/e0968015/mosei/Processed/features_sampled.pkl
+[done] PBS job completed successfully.

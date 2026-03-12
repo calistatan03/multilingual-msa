@@ -1,0 +1,27 @@
+JobID: 339152.venus01
+Host: cnode-33-43-21
+Start: Sat Feb  7 20:53:24 +08 2026
+Workdir: /home/svu/e0968015/feat_extraction/mosei
+
+=== After label filter [-2.0, 2.0] ===
+train: raw  16326 | kept  15208 | unique videos 2240
+valid: raw   1871 | kept   1774 | unique videos  300
+test : raw   4659 | kept   4393 | unique videos  674
+
+=== Final sample stats ===
+train: utterances 2722 | unique videos 2240 | cap 30
+valid: utterances  647 | unique videos 300 | cap 30
+test : utterances 1034 | unique videos 674 | cap 30
+('overall unique videos:', 3214)
+
+Overlaps (info only):
+('train & valid:', 0)
+('train & test :', 0)
+('valid & test :', 0)
+
+('Wrote:', 'data/label_sampled.csv')
+('Total rows:', 4403)
+
+End: Sat Feb  7 20:53:24 +08 2026
+Log saved to: logs/mosei_sample_disjoint_339152.venus01.log
+Output saved to: data/label_sampled.csv

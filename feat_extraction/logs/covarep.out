@@ -1,0 +1,29 @@
+[info] pwd: /hpctmp/scratch/e0968015/mosei
+[info] matlab: /app1/common/bin/matlab
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2020 The MathWorks, Inc.
+              R2020a Update 1 (9.8.0.1359463) 64-bit (glnxa64)
+                               April 9, 2020
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+{Error using run (line 66)
+run_covarep_batch.m not found.
+} 
+      ======================================================================================
+     Resource Usage on 2026-03-08 01:00:48.442857:
+     JobId: 375366.venus01  				 Project: covarep_batch 
+     Submission Host: atlas8-c01 
+     Exit Status: 0
+     NCPUs Requested: 12 				 NCPUs Used: 12
+     Memory Requested: 120gb 				 Memory Used: 0b 
+     Vmem Used: 6248204kb
+     CPU Time Used: 00:00:00 
+     Walltime requested: 240:00:00 			 Walltime Used: 00:00:28
+     Submit Time:  Sun Mar  8 01:00:16 2026 		 Start Time: Sun Mar  8 01:00:20 2026 
+     End Time: Sun Mar  8 01:00:48 2026 
+     Execution Nodes Used: (cnode-33-43-33:ncpus=12:mem=125829120kb)
+     ======================================================================================

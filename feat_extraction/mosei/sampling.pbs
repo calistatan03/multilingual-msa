@@ -1,0 +1,211 @@
+#!/bin/bash
+#PBS -P mosei_sampling
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=80gb
+#PBS -j oe
+#PBS -N mosei_sampling
+
+cd "$PBS_O_WORKDIR" || exit 1
+
+mkdir -p logs
+LOGFILE="logs/mosei_sample_disjoint_${PBS_JOBID}.log"
+exec > "$LOGFILE" 2>&1
+
+echo "JobID: $PBS_JOBID"
+echo "Host: $(hostname)"
+echo "Start: $(date)"
+echo "Workdir: $PWD"
+echo
+
+# ---- EDIT IF NEEDED ----
+INFILE="data/label.csv"
+OUTDIR="data"
+OUTFILE="${OUTDIR}/label_sampled.csv"
+# ------------------------
+
+TRAIN_N=2722
+VALID_N=647
+TEST_N=1034
+
+LOW=-2.0
+HIGH=2.0
+
+# optional: increase unique videos by limiting utterances per video
+CAP_TRAIN=30
+CAP_VALID=30
+CAP_TEST=30
+
+mkdir -p "$OUTDIR"
+
+python - <<'PY'
+# -*- coding: utf-8 -*-
+import csv, random, os
+from collections import defaultdict, Counter
+
+INFILE = "/hpctmp/scratch/e0968015/mosei/label_original.csv"
+OUTFILE = "/hpctmp/scatch/e0968015/mosei/label.csv"
+
+SEED = 42
+random.seed(SEED)
+
+VIDEO_COL = "video_id"
+MODE_COL  = "mode"
+LABEL_COL = "label"
+
+# Exact utterance targets
+UTT_TARGET = {"train": 2722, "valid": 647, "test": 1034}
+
+# Fixed video quotas (sum = 145)
+VID_QUOTA = {"train": 90, "valid": 21, "test": 34}
+
+LOW, HIGH = -2.0, 2.0
+
+# mode -> video -> rows
+by_mode_video = defaultdict(lambda: defaultdict(list))
+raw = Counter()
+kept = Counter()
+
+with open(INFILE, "rb") as f:
+    reader = csv.DictReader(f)
+    need = [VIDEO_COL, MODE_COL, LABEL_COL]
+    missing = [c for c in need if c not in reader.fieldnames]
+    if missing:
+        raise SystemExit("Missing columns {}. Found: {}".format(missing, reader.fieldnames))
+
+    for row in reader:
+        mode = (row.get(MODE_COL, "") or "").strip()
+        if mode not in UTT_TARGET:
+            continue
+
+        vid = (row.get(VIDEO_COL, "") or "").strip()
+        if not vid:
+            continue
+
+        try:
+            y = float(row[LABEL_COL])
+        except Exception:
+            continue
+
+        raw[mode] += 1
+        if not (LOW <= y <= HIGH):
+            continue
+
+        by_mode_video[mode][vid].append(row)
+        kept[mode] += 1
+
+print("=== After label filter [{}, {}] ===".format(LOW, HIGH))
+for m in ["train","valid","test"]:
+    print("{:5s}: raw {:6d} | kept {:6d} | unique videos {:4d}".format(
+        m, raw[m], kept[m], len(by_mode_video[m])
+    ))
+print("")
+
+# Select videos per mode (random), but ensure chosen videos have enough utterances
+selected_videos = {}
+
+for m in ["train","valid","test"]:
+    vids = list(by_mode_video[m].keys())
+    if len(vids) < VID_QUOTA[m]:
+        raise SystemExit("Not enough videos in {} after filtering: have {}, need {}".format(
+            m, len(vids), VID_QUOTA[m]
+        ))
+
+    # Shuffle videos and take initial quota
+    random.shuffle(vids)
+    chosen = vids[:VID_QUOTA[m]]
+
+    # Check coverage: total utterances available within chosen videos
+    total_avail = sum(len(by_mode_video[m][v]) for v in chosen)
+
+    # If somehow insufficient, extend chosen (this may increase videos > quota; we will report it)
+    i = VID_QUOTA[m]
+    while total_avail < UTT_TARGET[m] and i < len(vids):
+        chosen.append(vids[i])
+        total_avail += len(by_mode_video[m][vids[i]])
+        i += 1
+
+    if total_avail < UTT_TARGET[m]:
+        raise SystemExit("Even using ALL videos in {}, not enough utterances to reach {}".format(
+            m, UTT_TARGET[m]
+        ))
+
+    selected_videos[m] = chosen
+    print("{}: selected videos {} (quota {}), utterances available {}".format(
+        m, len(chosen), VID_QUOTA[m], total_avail
+    ))
+
+print("")
+
+def round_robin_sample(mode, target_n, chosen_vids):
+    # Shuffle rows within each chosen video
+    for v in chosen_vids:
+        random.shuffle(by_mode_video[mode][v])
+
+    # Round-robin pull to spread evenly across chosen videos
+    selected = []
+    used = Counter()
+    active = list(chosen_vids)
+    i = 0
+
+    while len(selected) < target_n and active:
+        v = active[i % len(active)]
+        idx = used[v]
+        rows = by_mode_video[mode][v]
+        if idx >= len(rows):
+            active.remove(v)
+            continue
+        selected.append(rows[idx])
+        used[v] += 1
+        i += 1
+
+    if len(selected) < target_n:
+        raise SystemExit("Unexpected shortfall in {}: got {}, need {}".format(mode, len(selected), target_n))
+    return selected
+
+train_rows = round_robin_sample("train", UTT_TARGET["train"], selected_videos["train"])
+valid_rows = round_robin_sample("valid", UTT_TARGET["valid"], selected_videos["valid"])
+test_rows  = round_robin_sample("test",  UTT_TARGET["test"],  selected_videos["test"])
+
+def uniq_vid(rows):
+    return len(set(r[VIDEO_COL] for r in rows))
+
+train_vids = set(r[VIDEO_COL] for r in train_rows)
+valid_vids = set(r[VIDEO_COL] for r in valid_rows)
+test_vids  = set(r[VIDEO_COL] for r in test_rows)
+
+print("=== Final sample stats ===")
+print("train: utterances {:4d} | unique videos {:3d}".format(len(train_rows), uniq_vid(train_rows)))
+print("valid: utterances {:4d} | unique videos {:3d}".format(len(valid_rows), uniq_vid(valid_rows)))
+print("test : utterances {:4d} | unique videos {:3d}".format(len(test_rows),  uniq_vid(test_rows)))
+overall_unique = len(train_vids | valid_vids | test_vids)
+print("overall unique videos:", overall_unique)
+print("")
+print("Overlaps (info only):")
+print("train & valid:", len(train_vids & valid_vids))
+print("train & test :", len(train_vids & test_vids))
+print("valid & test :", len(valid_vids & test_vids))
+print("")
+
+selected_all = train_rows + valid_rows + test_rows
+if not selected_all:
+    raise SystemExit("No rows selected. Check inputs.")
+
+outdir = os.path.dirname(OUTFILE)
+if outdir and not os.path.exists(outdir):
+    os.makedirs(outdir)
+
+fieldnames = list(selected_all[0].keys())
+with open(OUTFILE, "w") as fo:
+    w = csv.DictWriter(fo, fieldnames=fieldnames)
+    w.writeheader()
+    w.writerows(selected_all)
+
+print("Wrote:", OUTFILE)
+print("Total rows:", len(selected_all))
+PY
+
+echo
+echo "End: $(date)"
+echo "Log saved to: $LOGFILE"
+echo "Output saved to: $OUTFILE"
+

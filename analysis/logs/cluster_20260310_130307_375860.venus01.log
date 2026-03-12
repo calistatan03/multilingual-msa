@@ -1,0 +1,120 @@
+========================================
+Cluster Analysis PBS Job Started
+Time       : Tue Mar 10 13:03:07 +08 2026
+Host       : cnode-33-43-21
+Job ID     : 375860.venus01
+Workdir    : /home/svu/e0968015/analysis
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260310_130307_375860.venus01.log
+========================================
+[INFO] PBS queue info
+  PBS_QUEUE      = parallel
+  PBS_NODEFILE   = /var/spool/pbs/aux/375860.venus01
+  PBS_NP         = N/A
+[INFO] Allocated nodes:
+     12 cnode-33-43-21
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[INFO] Python path: /home/svu/e0968015/.conda/envs/msa-fet/bin/python
+[INFO] Python version: Python 3.9.13
+[INFO] SCRIPT_PATH = /home/svu/e0968015/analysis/cluster_analysis.py
+[INFO] ROOT_DIR    = /hpctmp/scratch/e0968015/mosei/FusionRuns
+[INFO] OUT_DIR     = /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1
+[INFO] Running pre-flight checks...
+[INFO] Listing matching run folders (preview):
+/hpctmp/scratch/e0968015/mosei/FusionRuns/audio_guided_attention_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/audio_guided_attn_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/bibimodal_fusion_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/bibimodal_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/early_fusion_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/early_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/graph_fusion_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/graph_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/kernel_fusion_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/kernel_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/lowrank_fusion_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/lowrank_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/tensor_fusion_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/tensor_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/text_guided_attention_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/text_guided_attention_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/trimodal_attention_fusion_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/triodal_attention_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/vision_guided_attention_full_35_run3
+/hpctmp/scratch/e0968015/mosei/FusionRuns/vision_guided_attn_run3
+[INFO] Starting clustering analysis...
+[nltk_data] Downloading package stopwords to
+[nltk_data]     /home/svu/e0968015/nltk_data...
+[nltk_data]   Package stopwords is already up-to-date!
+[scan] Found 4 input CSVs
+  - /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster0_clips_with_predictions.csv
+  - /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster1_clips_with_predictions.csv
+  - /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster2_clips_with_predictions.csv
+  - /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster3_clips_with_predictions.csv
+[step] prediction-pattern features...
+[step] text engineered features...
+[step] audio features (librosa)...
+[audio] processed 50/1034
+[audio] processed 100/1034
+[audio] processed 150/1034
+[audio] processed 200/1034
+[audio] processed 250/1034
+[audio] processed 300/1034
+[audio] processed 350/1034
+[audio] processed 400/1034
+[audio] processed 450/1034
+[audio] processed 500/1034
+[audio] processed 550/1034
+[audio] processed 600/1034
+[audio] processed 650/1034
+[audio] processed 700/1034
+[audio] processed 750/1034
+[audio] processed 800/1034
+[audio] processed 850/1034
+[audio] processed 900/1034
+[audio] processed 950/1034
+[audio] processed 1000/1034
+[step] cluster profile...
+[done] wrote:
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_chsims_a35_run1/utterances_enriched.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_chsims_a35_run1/cluster_profile.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_chsims_a35_run1/missing_files.csv
+
+[quick] cluster sizes:
+ cluster   n
+       0 475
+       1 183
+       2 308
+       3  68
+[INFO] Python exit status: 0
+[INFO] Runtime (s): 1285
+[INFO] Output files in /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1:
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster0_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster1_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster2_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster3_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster_centroids.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_clustered_utterances.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_clusters_pca.png
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_clusters_tsne.png
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_cluster_summary.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_method_feature_stats.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/abs_pca_variance.png
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_cluster0_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_cluster1_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_cluster2_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_cluster3_clips_with_predictions.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_cluster_centroids.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_clustered_utterances.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_clusters_pca.png
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_clusters_tsne.png
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_cluster_summary.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_method_feature_stats.csv
+/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35/signed_pca_variance.png
+========================================
+Cluster Analysis PBS Job Ended
+Time       : Tue Mar 10 13:24:41 +08 2026
+Exit status: 0
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260310_130307_375860.venus01.log
+========================================

@@ -1,0 +1,14 @@
+nltk_data/
+
+experiments/__pycache__/
+unimodal/__pycache__/
+
+feat_extraction/mosei/data/
+
+__pycache__/
+*.pyc
+
+venv/
+.env
+
+privatemodules/

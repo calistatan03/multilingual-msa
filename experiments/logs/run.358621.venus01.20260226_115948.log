@@ -1,0 +1,313 @@
+[info] Job ID: 358621.venus01
+[info] Host: cnode-33-43-26
+[info] Project dir: /home/svu/e0968015/experiments
+[info] Dataset dir: /hpctmp/scratch/e0968015/mosei
+[info] Features: /hpctmp/scratch/e0968015/mosei/Processed/features_full_35.pkl
+[info] Out dir: /hpctmp/scratch/e0968015/mosei/FusionRuns/lowrank_fusion_full_35_run3
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[info] python: /home/svu/e0968015/.conda/envs/msa-unimodal/bin/python
+Python 3.10.6
+Data loaders initialised
+Model initialised
+Trainer initialised
+[train] step=50/256 loss=0.8284
+[train] step=100/256 loss=0.5985
+[train] step=150/256 loss=0.6834
+[train] step=200/256 loss=0.7235
+[train] step=250/256 loss=0.6038
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [0.48170677 0.03149945 0.06861334 ... 0.39775348 0.12061141 0.13410929]
+{"epoch": 1, "train_loss": 0.6941214142134413, "val_mae": 0.605534017086029, "val_corr": 0.6224538197130537, "val_binary_acc": 0.6718332442544094, "val_binary_f1": 0.73557278208441, "threshold": 0.0}
+[train] step=50/256 loss=0.6787
+[train] step=100/256 loss=0.7849
+[train] step=150/256 loss=0.7849
+[train] step=200/256 loss=0.5632
+[train] step=250/256 loss=0.5788
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.759138    0.00395085 -0.11331506 ...  0.28360218  0.09937911
+  0.33972597]
+{"epoch": 2, "train_loss": 0.6383449379354715, "val_mae": 0.5762255191802979, "val_corr": 0.6654044160303128, "val_binary_acc": 0.7161945483698557, "val_binary_f1": 0.7428571428571428, "threshold": 0.0}
+[train] step=50/256 loss=0.6543
+[train] step=100/256 loss=0.6439
+[train] step=150/256 loss=0.7041
+[train] step=200/256 loss=0.4299
+[train] step=250/256 loss=0.6058
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.62889564 -0.00534073 -0.00070386 ...  0.11379297  0.10088998
+  0.16195974]
+{"epoch": 3, "train_loss": 0.6236451587174088, "val_mae": 0.5885173678398132, "val_corr": 0.6365874236705711, "val_binary_acc": 0.6825227151256013, "val_binary_f1": 0.7390158172231985, "threshold": 0.0}
+[train] step=50/256 loss=0.6103
+[train] step=100/256 loss=0.5800
+[train] step=150/256 loss=0.5280
+[train] step=200/256 loss=0.7043
+[train] step=250/256 loss=0.5528
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.5159346  -0.02956288 -0.0407069  ...  0.29393816  0.02567083
+  0.11765699]
+{"epoch": 4, "train_loss": 0.6177076249150559, "val_mae": 0.5804269909858704, "val_corr": 0.663587787989388, "val_binary_acc": 0.7220737573490112, "val_binary_f1": 0.7435897435897436, "threshold": 0.0}
+[train] step=50/256 loss=0.6332
+[train] step=100/256 loss=0.5660
+[train] step=150/256 loss=0.6803
+[train] step=200/256 loss=0.6049
+[train] step=250/256 loss=0.5356
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.5981143  -0.02052889 -0.02946921 ...  0.1040866   0.03757141
+  0.1470775 ]
+{"epoch": 5, "train_loss": 0.6165904074441642, "val_mae": 0.5740800499916077, "val_corr": 0.6615611354103801, "val_binary_acc": 0.7391769107429182, "val_binary_f1": 0.7479338842975206, "threshold": 0.0}
+[train] step=50/256 loss=0.6510
+[train] step=100/256 loss=0.6773
+[train] step=150/256 loss=0.5948
+[train] step=200/256 loss=0.6212
+[train] step=250/256 loss=0.7480
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [0.8542665  0.20666647 0.00711726 ... 0.4926138  0.1796772  0.39279997]
+{"epoch": 6, "train_loss": 0.608539744047448, "val_mae": 0.5881097912788391, "val_corr": 0.6675481100190002, "val_binary_acc": 0.675040085515767, "val_binary_f1": 0.740392826643894, "threshold": 0.0}
+[train] step=50/256 loss=0.5827
+[train] step=100/256 loss=0.4919
+[train] step=150/256 loss=0.5854
+[train] step=200/256 loss=0.7598
+[train] step=250/256 loss=0.5469
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [0.82856107 0.02012772 0.00595377 ... 0.36288896 0.03642737 0.08419054]
+{"epoch": 7, "train_loss": 0.6073243204737082, "val_mae": 0.6055883169174194, "val_corr": 0.6335335240927062, "val_binary_acc": 0.6242650988776055, "val_binary_f1": 0.717102615694165, "threshold": 0.0}
+[train] step=50/256 loss=0.5781
+[train] step=100/256 loss=0.6605
+[train] step=150/256 loss=0.5829
+[train] step=200/256 loss=0.7084
+[train] step=250/256 loss=0.5413
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.51288     0.02308391 -0.0151488  ...  0.17285675  0.03600212
+  0.044075  ]
+{"epoch": 8, "train_loss": 0.5988886719569564, "val_mae": 0.5864043831825256, "val_corr": 0.6552949274216059, "val_binary_acc": 0.6862640299305185, "val_binary_f1": 0.735704637550653, "threshold": 0.0}
+[train] step=50/256 loss=0.6748
+[train] step=100/256 loss=0.6687
+[train] step=150/256 loss=0.5055
+[train] step=200/256 loss=0.6092
+[train] step=250/256 loss=0.4718
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 5.9459913e-01 -3.7065893e-04  9.9650994e-03 ...  3.2977051e-01
+  1.0111056e-01  1.7567703e-01]
+{"epoch": 9, "train_loss": 0.597488418687135, "val_mae": 0.5808604955673218, "val_corr": 0.668364274461795, "val_binary_acc": 0.6745056119722074, "val_binary_f1": 0.733245729303548, "threshold": 0.0}
+[train] step=50/256 loss=0.5390
+[train] step=100/256 loss=0.5071
+[train] step=150/256 loss=0.6143
+[train] step=200/256 loss=0.6237
+[train] step=250/256 loss=0.4913
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.8675672   0.01854271 -0.12865336 ...  0.29744136  0.1203395
+  0.3220063 ]
+{"epoch": 10, "train_loss": 0.5989212696440518, "val_mae": 0.5681589245796204, "val_corr": 0.6648860022317, "val_binary_acc": 0.6745056119722074, "val_binary_f1": 0.7284886312973696, "threshold": 0.0}
+[train] step=50/256 loss=0.5452
+[train] step=100/256 loss=0.6065
+[train] step=150/256 loss=0.6881
+[train] step=200/256 loss=0.6777
+[train] step=250/256 loss=0.4104
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [0.41474736 0.01461714 0.01935159 ... 0.2691822  0.00828215 0.02704006]
+{"epoch": 11, "train_loss": 0.5901005937485024, "val_mae": 0.5999650955200195, "val_corr": 0.6412213015243877, "val_binary_acc": 0.6568679850347408, "val_binary_f1": 0.7307046979865771, "threshold": 0.0}
+[train] step=50/256 loss=0.5690
+[train] step=100/256 loss=0.5239
+[train] step=150/256 loss=0.5854
+[train] step=200/256 loss=0.6265
+[train] step=250/256 loss=0.6750
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 8.13252389e-01  5.68293035e-04 -1.17941104e-01 ...  1.46956265e-01
+ -6.01995736e-03  3.06242090e-02]
+{"epoch": 12, "train_loss": 0.5883799546863884, "val_mae": 0.5716951489448547, "val_corr": 0.663645772952447, "val_binary_acc": 0.706574024585783, "val_binary_f1": 0.7194685743484925, "threshold": 0.0}
+[train] step=50/256 loss=0.5420
+[train] step=100/256 loss=0.6099
+[train] step=150/256 loss=0.5336
+[train] step=200/256 loss=0.6156
+[train] step=250/256 loss=0.6348
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 1.03558052e+00 -4.99144197e-04 -4.98556823e-01 ...  4.29395616e-01
+  1.18076615e-02  2.19528586e-01]
+{"epoch": 13, "train_loss": 0.5851127714850008, "val_mae": 0.5738983154296875, "val_corr": 0.665857080093605, "val_binary_acc": 0.7060395510422234, "val_binary_f1": 0.744661095636026, "threshold": 0.0}
+[train] step=50/256 loss=0.4836
+[train] step=100/256 loss=0.6075
+[train] step=150/256 loss=0.5795
+[train] step=200/256 loss=0.6037
+[train] step=250/256 loss=0.6623
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.7313899   0.00141418 -0.05784572 ...  0.23798898  0.00417309
+  0.00509595]
+{"epoch": 14, "train_loss": 0.5827577370218933, "val_mae": 0.5723444819450378, "val_corr": 0.6572414638224566, "val_binary_acc": 0.703901656867985, "val_binary_f1": 0.7376893939393938, "threshold": 0.0}
+[train] step=50/256 loss=0.6126
+[train] step=100/256 loss=0.5366
+[train] step=150/256 loss=0.5627
+[train] step=200/256 loss=0.5236
+[train] step=250/256 loss=0.6369
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.711693    0.00290675  0.004479   ... -0.00493732  0.00167478
+ -0.00166923]
+{"epoch": 15, "train_loss": 0.5783644617768005, "val_mae": 0.5729784369468689, "val_corr": 0.6513974632652361, "val_binary_acc": 0.6937466595403528, "val_binary_f1": 0.7313642756680732, "threshold": 0.0}
+[train] step=50/256 loss=0.6508
+[train] step=100/256 loss=0.6131
+[train] step=150/256 loss=0.4839
+[train] step=200/256 loss=0.6511
+[train] step=250/256 loss=0.5440
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [0.74087256 0.0021254  0.08674406 ... 0.4180192  0.00679788 0.21804653]
+{"epoch": 16, "train_loss": 0.580029126140289, "val_mae": 0.5794364809989929, "val_corr": 0.6713570064109371, "val_binary_acc": 0.6659540352752539, "val_binary_f1": 0.7355057130765975, "threshold": 0.0}
+[train] step=50/256 loss=0.5616
+[train] step=100/256 loss=0.5160
+[train] step=150/256 loss=0.5231
+[train] step=200/256 loss=0.5463
+[train] step=250/256 loss=0.6119
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [0.6937732  0.00282875 0.19617322 ... 0.31744722 0.00941164 0.22930118]
+{"epoch": 17, "train_loss": 0.57248814124614, "val_mae": 0.5881032943725586, "val_corr": 0.6514457357389212, "val_binary_acc": 0.6611437733832175, "val_binary_f1": 0.7313559322033899, "threshold": 0.0}
+[train] step=50/256 loss=0.4495
+[train] step=100/256 loss=0.5159
+[train] step=150/256 loss=0.5859
+[train] step=200/256 loss=0.6074
+[train] step=250/256 loss=0.5615
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.8366551   0.00238747 -0.0885493  ...  0.00268708  0.0043208
+  0.12331977]
+{"epoch": 18, "train_loss": 0.5735037472331896, "val_mae": 0.569438636302948, "val_corr": 0.6728568710181436, "val_binary_acc": 0.6691608765366115, "val_binary_f1": 0.7360341151385928, "threshold": 0.0}
+[train] step=50/256 loss=0.4974
+[train] step=100/256 loss=0.5627
+[train] step=150/256 loss=0.4797
+[train] step=200/256 loss=0.5332
+[train] step=250/256 loss=0.5623
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 9.0251637e-01 -8.8201551e-04 -2.5621229e-01 ...  2.6512265e-01
+ -8.1227178e-04  1.2356105e-01]
+{"epoch": 19, "train_loss": 0.5662299366667867, "val_mae": 0.5571140050888062, "val_corr": 0.6751968846434067, "val_binary_acc": 0.7076429716729022, "val_binary_f1": 0.7401425178147268, "threshold": 0.0}
+[train] step=50/256 loss=0.5294
+[train] step=100/256 loss=0.6321
+[train] step=150/256 loss=0.5073
+[train] step=200/256 loss=0.6522
+[train] step=250/256 loss=0.7346
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [1.1259775  0.00173755 0.12637031 ... 0.3550959  0.0018031  0.270844  ]
+{"epoch": 20, "train_loss": 0.5676653460832313, "val_mae": 0.5841692090034485, "val_corr": 0.6669046973596047, "val_binary_acc": 0.6862640299305185, "val_binary_f1": 0.7415235579040071, "threshold": 0.0}
+[train] step=50/256 loss=0.5484
+[train] step=100/256 loss=0.4930
+[train] step=150/256 loss=0.4003
+[train] step=200/256 loss=0.6609
+[train] step=250/256 loss=0.5558
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.86008793 -0.00210476  0.25943428 ...  0.36145592  0.00777414
+  0.24748467]
+{"epoch": 21, "train_loss": 0.5676934445509687, "val_mae": 0.5749748349189758, "val_corr": 0.6694508824948757, "val_binary_acc": 0.7017637626937466, "val_binary_f1": 0.7495511669658885, "threshold": 0.0}
+[train] step=50/256 loss=0.4532
+[train] step=100/256 loss=0.6127
+[train] step=150/256 loss=0.5811
+[train] step=200/256 loss=0.5043
+[train] step=250/256 loss=0.6181
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [8.6483860e-01 2.5029486e-04 6.9866024e-02 ... 2.6517913e-01 1.0504115e-03
+ 2.7359638e-01]
+{"epoch": 22, "train_loss": 0.5585909754736349, "val_mae": 0.5776534080505371, "val_corr": 0.661405885982086, "val_binary_acc": 0.6889363976483164, "val_binary_f1": 0.7397137745974955, "threshold": 0.0}
+[train] step=50/256 loss=0.4997
+[train] step=100/256 loss=0.5636
+[train] step=150/256 loss=0.5552
+[train] step=200/256 loss=0.6134
+[train] step=250/256 loss=0.5537
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.9627182   0.0010503  -0.08338095 ...  0.47044832  0.0010503
+  0.01548496]
+{"epoch": 23, "train_loss": 0.5622613908490166, "val_mae": 0.6078492403030396, "val_corr": 0.6434469619979449, "val_binary_acc": 0.6686264029930519, "val_binary_f1": 0.7343616109682948, "threshold": 0.0}
+[train] step=50/256 loss=0.6550
+[train] step=100/256 loss=0.6301
+[train] step=150/256 loss=0.5408
+[train] step=200/256 loss=0.7149
+[train] step=250/256 loss=0.6064
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 9.3135726e-01 -6.9977489e-04 -1.4172106e-03 ...  2.2835279e-01
+ -6.9897831e-04  3.2426876e-01]
+{"epoch": 24, "train_loss": 0.5601980491774157, "val_mae": 0.5627764463424683, "val_corr": 0.6751456532826966, "val_binary_acc": 0.7258150721539284, "val_binary_f1": 0.7510917030567684, "threshold": 0.0}
+[train] step=50/256 loss=0.6004
+[train] step=100/256 loss=0.6154
+[train] step=150/256 loss=0.4349
+[train] step=200/256 loss=0.6456
+[train] step=250/256 loss=0.6353
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 9.8704576e-01 -3.3388362e-04  3.3405054e-02 ...  2.9845631e-01
+  1.3058244e-03  2.5568420e-01]
+{"epoch": 25, "train_loss": 0.5568656593095511, "val_mae": 0.5819565057754517, "val_corr": 0.6580471328170949, "val_binary_acc": 0.7044361304115446, "val_binary_f1": 0.7482931269913519, "threshold": 0.0}
+[train] step=50/256 loss=0.6167
+[train] step=100/256 loss=0.5786
+[train] step=150/256 loss=0.6096
+[train] step=200/256 loss=0.4880
+[train] step=250/256 loss=0.5216
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 8.5501242e-01 -5.1779556e-05  3.9065909e-02 ...  3.5397771e-01
+ -5.1779556e-05  1.3335975e-01]
+{"epoch": 26, "train_loss": 0.5544189339270815, "val_mae": 0.5786382555961609, "val_corr": 0.6573994852706061, "val_binary_acc": 0.7103153393907001, "val_binary_f1": 0.750689972401104, "threshold": 0.0}
+[train] step=50/256 loss=0.5635
+[train] step=100/256 loss=0.6172
+[train] step=150/256 loss=0.6068
+[train] step=200/256 loss=0.5786
+[train] step=250/256 loss=0.5239
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 8.2682854e-01 -4.2809657e-04  3.9220750e-02 ...  2.2022204e-01
+ -4.2809657e-04 -3.2730593e-04]
+{"epoch": 27, "train_loss": 0.5528920210199431, "val_mae": 0.5602697134017944, "val_corr": 0.6700657131901531, "val_binary_acc": 0.7252805986103688, "val_binary_f1": 0.7535953978907, "threshold": 0.0}
+[train] step=50/256 loss=0.4634
+[train] step=100/256 loss=0.4794
+[train] step=150/256 loss=0.6259
+[train] step=200/256 loss=0.4615
+[train] step=250/256 loss=0.5504
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 8.8764066e-01 -7.2244427e-04 -9.4394878e-02 ...  4.1076377e-01
+ -1.6693340e-04  9.4372556e-02]
+{"epoch": 28, "train_loss": 0.5469916708534583, "val_mae": 0.5591657161712646, "val_corr": 0.6755740121998585, "val_binary_acc": 0.7284874398717264, "val_binary_f1": 0.7509803921568627, "threshold": 0.0}
+[train] step=50/256 loss=0.6397
+[train] step=100/256 loss=0.4921
+[train] step=150/256 loss=0.5606
+[train] step=200/256 loss=0.5265
+[train] step=250/256 loss=0.5462
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.8932548   0.00510902 -0.17580265 ...  0.21594818  0.00511918
+  0.00525363]
+{"epoch": 29, "train_loss": 0.5483695941511542, "val_mae": 0.5617366433143616, "val_corr": 0.6687367880504324, "val_binary_acc": 0.6803848209513629, "val_binary_f1": 0.7308730873087308, "threshold": 0.0}
+[train] step=50/256 loss=0.5505
+[train] step=100/256 loss=0.5113
+[train] step=150/256 loss=0.5305
+[train] step=200/256 loss=0.6271
+[train] step=250/256 loss=0.6063
+Labels: [ 1.          0.         -0.6666667  ...  0.33333334  0.
+  0.        ]
+Predictions: [ 0.7374524   0.00414069 -0.06542941 ...  0.33463112  0.00413776
+  0.0861121 ]
+{"epoch": 30, "train_loss": 0.550908702542074, "val_mae": 0.5683411359786987, "val_corr": 0.6583341446515155, "val_binary_acc": 0.6654195617316943, "val_binary_f1": 0.7268760907504364, "threshold": 0.0}
+Labels: [ 0.33333334 -1.          0.         ...  0.          1.
+  1.6666666 ]
+Predictions: [ 0.5214127  -0.37240005  0.87894857 ...  0.02765638  1.4650027
+  0.4973367 ]
+{"split": "test", "best_epoch": 19, "best_val_mae": 0.5571140050888062, "test_mae": 0.5746678113937378, "test_corr": 0.7165728797962823, "test_binary_acc": 0.7254775702940545, "test_binary_f1": 0.7494613124387856, "threshold": 0.0}
+Predictions saved at: /hpctmp/scratch/e0968015/mosei/FusionRuns/lowrank_fusion_full_35_run3/preds_test.json
+{"done": true, "best_ckpt": "/hpctmp/scratch/e0968015/mosei/FusionRuns/lowrank_fusion_full_35_run3/best_lowrank_fusion.pt", "test": {"mae": 0.5746678113937378, "corr": 0.7165728797962823, "binary_acc": 0.7254775702940545, "binary_f1": 0.7494613124387856}}

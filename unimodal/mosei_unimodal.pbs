@@ -1,0 +1,93 @@
+#!/bin/bash
+#PBS -P mosei_msa_fet
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=80gb
+#PBS -j oe
+#PBS -N mosei_unimodal
+
+set -euo pipefail
+
+# ---- paths ----
+PROJECT_DIR="/home/svu/e0968015/unimodal"
+DATASET_DIR="/hpctmp/scratch/e0968015/mosei"
+OUT_DIR="${PROJECT_DIR}"
+PKL="${DATASET_DIR}/Processed/features.pkl"
+
+ENV_NAME="msa-unimodal"
+
+mkdir -p "${PROJECT_DIR}/logs" "${OUT_DIR}"
+cd "${PROJECT_DIR}"
+
+LOG_DIR="${PROJECT_DIR}/logs"
+RUN_LOG="${LOG_DIR}/unimodal.${PBS_JOBID:-manual}.$(date +%Y%m%d_%H%M%S).log"
+exec > >(stdbuf -oL -eL tee -a "${RUN_LOG}") 2>&1
+
+echo "[info] Job ID: ${PBS_JOBID}"
+echo "[info] Host: $(hostname)"
+echo "[info] Project dir: ${PROJECT_DIR}"
+echo "[info] Dataset dir: ${DATASET_DIR}"
+echo "[info] Pickle: ${PKL}"
+echo "[info] Output dir: ${OUT_DIR}"
+echo "[info] Env: ${ENV_NAME}"
+
+module purge
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# ---- conda ----
+set +u
+source activate "${ENV_NAME}"
+set -u
+
+echo "[info] python: $(which python)"
+python -V
+
+python -c "import torch; print('[info] torch ok | version:', torch.__version__, '| cuda:', torch.cuda.is_available())"
+
+# ---- keep caches off /home to avoid quota issues ----
+export HF_HOME="/hpctmp/scratch/e0968015/hf_home"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TORCH_HOME="${HF_HOME}/torch"
+mkdir -p "$TRANSFORMERS_CACHE" "$HF_DATASETS_CACHE" "$TORCH_HOME"
+
+export TMPDIR="/hpctmp/scratch/e0968015/tmp"
+mkdir -p "${TMPDIR}"
+
+# ---- sanity check ----
+python - <<'PY'
+import os
+PKL="/hpctmp/scratch/e0968015/mosei/Processed/features.pkl"
+assert os.path.exists(PKL), f"Missing features.pkl at {PKL}"
+print("[info] features.pkl exists:", PKL)
+PY
+
+# ---- run unimodal training (sequential) ----
+for MODALITY in vision text audio; do
+  echo "=============================="
+  echo "[info] Starting MOSEI unimodal: ${MODALITY}"
+  echo "=============================="
+
+  python train_unimodal.py \
+    --pkl "${PKL}" \
+    --dataset_name "mosei" \
+    --modality "${MODALITY}" \
+    --label_key regression_labels \
+    --outdir "${OUT_DIR}" \
+    --epochs 30 \
+    --batch_size 32 \
+    --lr 1e-5 \
+    --d_model 256 \
+    --n_heads 4 \
+    --n_layers 2 \
+    --dropout 0.1 \
+    --conv_kernel 1
+
+  echo "[info] Finished MOSEI unimodal: ${MODALITY}"
+done
+
+echo "[info] All MOSEI unimodal runs completed."
+echo "[info] Metrics: ${OUT_DIR}/metrics_mosei_*.json"
+

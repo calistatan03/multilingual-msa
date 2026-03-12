@@ -1,0 +1,76 @@
+#!/bin/bash
+#PBS -P download_mosei
+#PBS -q serial
+#PBS -l select=1:ncpus=1
+#PBS -j oe
+#PBS -N mosei_labels
+
+set -eo pipefail
+cd "$PBS_O_WORKDIR" || exit 1
+
+mkdir -p data/mosei
+
+module purge || true
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# env created beforehand (interactive)
+source activate mosei-dl
+
+LABEL_URL="https://drive.google.com/file/d/17_IhQLXHqON78XX5i0h9c0ywXXpt60PX/view?usp=drive_link"
+RAW_PATH="data/label_raw.csv"
+OUT_PATH="data/label.csv"
+
+echo "[info] downloading labels -> $RAW_PATH"
+gdown --fuzzy "$LABEL_URL" -O "$RAW_PATH"
+
+echo "[info] reordering columns to MMSA-FET format -> $OUT_PATH"
+python - <<'PY'
+import csv
+import sys
+
+inp = "data/label_raw.csv"
+out = "data/label.csv"
+
+# MMSA-FET required order:
+wanted = ["video_id","clip_id","text","label","label_T","label_A","label_V","annotation","mode"]
+
+with open(inp, "r", encoding="utf-8", newline="") as f_in:
+    reader = csv.DictReader(f_in)
+    if not reader.fieldnames:
+        print("[error] No header found in label_raw.csv", file=sys.stderr)
+        sys.exit(2)
+
+    # verify required columns exist
+    missing = [c for c in wanted if c not in reader.fieldnames]
+    if missing:
+        print(f"[error] Missing columns {missing}. Found: {reader.fieldnames}", file=sys.stderr)
+        sys.exit(3)
+
+    # write reordered csv
+    with open(out, "w", encoding="utf-8", newline="") as f_out:
+        writer = csv.DictWriter(f_out, fieldnames=wanted)
+        writer.writeheader()
+        for row in reader:
+            writer.writerow({k: row.get(k, "") for k in wanted})
+
+# verify output header is exact
+with open(out, "r", encoding="utf-8", newline="") as f:
+    header = next(csv.reader(f))
+if header != wanted:
+    print(f"[error] Output header mismatch.\nExpected: {wanted}\nGot:      {header}", file=sys.stderr)
+    sys.exit(4)
+
+print("[done] label.csv created with correct MMSA-FET column order.")
+PY
+
+rm -f "$RAW_PATH"
+
+echo
+echo "[done] Preview:"
+head -n 2 "$OUT_PATH" || true
+
+exit $?
+

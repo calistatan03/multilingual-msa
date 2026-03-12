@@ -1,0 +1,14 @@
+[info] Job ID: 339404.venus01
+[info] Host: cnode-33-43-22
+[info] Project dir: /home/svu/e0968015/feat_extraction/mosei
+[info] Dataset dir: /hpctmp/scratch/e0968015/mosei
+[info] Config: /home/svu/e0968015/feat_extraction/mosei/mosei_fet.json
+[info] Output: /hpctmp/scratch/e0968015/mosei/Processed/features.pkl
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[info] python: /home/svu/e0968015/.conda/envs/msa-fet/bin/python
+Python 3.9.13
+[info] MSA_FET import ok
+Traceback (most recent call last):
+  File "<stdin>", line 3, in <module>
+AssertionError: Missing label.csv in hpctmp dataset dir

@@ -1,0 +1,67 @@
+#!/bin/bash
+#PBS -P results_analysis
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=80gb
+#PBS -j oe
+#PBS -N results_analysis
+
+set -euo pipefail
+
+
+# --- move to submission directory ---
+cd "$PBS_O_WORKDIR" || exit 1
+
+# ----------------------------
+# Logging setup
+# ----------------------------
+LOG_DIR="$PBS_O_WORKDIR/logs"
+mkdir -p "$LOG_DIR"
+
+TS=$(date +"%Y%m%d_%H%M%S")
+JOB_TAG="${PBS_JOBID:-nojobid}"
+LOG_FILE="$LOG_DIR/cluster_${TS}_${JOB_TAG}.log"
+
+# Redirect ALL stdout/stderr to both terminal and log file
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "========================================"
+echo "Audio-Vision Results Analysis PBS Job Started"
+echo "Time	 : $(date)"
+echo "Host	 : $(hostname)"
+echo "Job ID     : ${PBS_JOBID:-N/A}"
+echo "Workdir    : $PBS_O_WORKDIR"
+echo "Log file   : $LOG_FILE"
+echo "========================================"
+
+# Optional: print useful PBS env info
+echo "[INFO] PBS queue info"
+echo "  PBS_QUEUE      = ${PBS_O_QUEUE:-N/A}"
+echo "  PBS_NODEFILE   = ${PBS_NODEFILE:-N/A}"
+echo "  PBS_NP         = ${PBS_NP:-N/A}"
+
+if [[ -n "${PBS_NODEFILE:-}" && -f "${PBS_NODEFILE}" ]]; then
+  echo "[INFO] Allocated nodes:"
+  cat "$PBS_NODEFILE" | sort | uniq -c
+fi
+
+# ----------------------------
+# Environment setup
+# ----------------------------
+
+module purge
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# ---- conda ----
+set +u
+source activate msa-unimodal   # <-- your NEW env (rename if different)
+set -u
+
+echo "[INFO] Python path: $(which python)"
+echo "[INFO] Python version: $(python --version)"
+
+SCRIPT_PATH="/home/svu/e0968015/analysis/audio_vision_chsims.py"
+
+python "$SCRIPT_PATH"

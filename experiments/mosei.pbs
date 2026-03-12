@@ -1,0 +1,73 @@
+#!/bin/bash
+#PBS -P mosei_msa_fusion
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=160gb
+#PBS -j oe
+#PBS -N msa_fusion_mosei
+
+set -euo pipefail
+
+# ---- paths ----
+PROJECT_DIR="/home/svu/e0968015/experiments"   # <-- folder containing main.py, trainer.py, metrics.py, data.py
+DATASET_DIR="/hpctmp/scratch/e0968015/mosei"
+FEATURES_PKL="${DATASET_DIR}/Processed/features.pkl"
+
+OUT_DIR="${DATASET_DIR}/FusionRuns/audio_guided_attn_run3"
+mkdir -p "${OUT_DIR}"
+
+mkdir -p "${PROJECT_DIR}/logs"
+LOG_DIR="${PROJECT_DIR}/logs"
+RUN_LOG="${LOG_DIR}/run.${PBS_JOBID:-manual}.$(date +%Y%m%d_%H%M%S).log"
+
+cd "${PROJECT_DIR}"
+
+# stream both stdout+stderr to console AND to RUN_LOG (line-buffered)
+exec > >(stdbuf -oL -eL tee -a "${RUN_LOG}") 2>&1
+
+echo "[info] Job ID: ${PBS_JOBID}"
+echo "[info] Host: $(hostname)"
+echo "[info] Project dir: ${PROJECT_DIR}"
+echo "[info] Dataset dir: ${DATASET_DIR}"
+echo "[info] Features: ${FEATURES_PKL}"
+echo "[info] Out dir: ${OUT_DIR}"
+
+module purge
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# ---- conda ----
+set +u
+source activate msa-unimodal   # <-- your NEW env (rename if different)
+set -u
+
+echo "[info] python: $(which python)"
+python -V
+
+# ---- keep caches off /home to avoid quota issues ----
+export HF_HOME="/hpctmp/scratch/e0968015/hf_home"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TORCH_HOME="${HF_HOME}/torch"
+mkdir -p "$TRANSFORMERS_CACHE" "$HF_DATASETS_CACHE" "$TORCH_HOME"
+
+# (optional) torch multiprocessing safety
+export OMP_NUM_THREADS=12
+export MKL_NUM_THREADS=12
+
+# ---- run ----
+python main.py \
+  --features_pkl "${FEATURES_PKL}" \
+  --out_dir "${OUT_DIR}" \
+  --exp_name "audio_guided_attn" \
+  --fusion audio_guided_attn \
+  --epochs 30 \
+  --batch_size 64 \
+  --lr 1e-3 \
+  --loss_type l1 \
+  --threshold 0.0 \
+  --num_workers 0 \
+  --pin_memory \
+  --log_alphas
+

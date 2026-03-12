@@ -1,0 +1,48 @@
+{
+  "audio": {
+    "tool": "librosa",
+    "sample_rate": 22050,
+    "args": {
+      "mfcc": { "n_mfcc": 20, "htk": true },
+      "rms": {},
+      "chroma_cqt": {"n_chroma": 12},
+      "zero_crossing_rate": {},
+      "spectral_centroid": {}
+    }
+  },
+  "video": {
+    "tool": "mediapipe",
+    "fps": 10,
+    "multiFace": {
+      "enable": false,
+      "facedetScale": 0.25,
+      "minTrack": 10,
+      "numFailedDet": 10,
+      "minFaceSize": 1,
+      "cropScale": 0.4
+    },
+    "args": {
+      "face_mesh": {
+        "refine_landmarks": true,
+        "min_detection_confidence": 0.35,
+        "min_tracking_confidence": 0.5
+      },
+      "holistic": {
+        "model_complexity": 1,
+        "smooth_landmarks": true,
+        "enable_segmentation": true,
+        "smooth_segmentation": true,
+        "min_detection_confidence": 0.5,
+        "min_tracking_confidence": 0.5
+      },
+      "visualize": false,
+      "visualize_dir": "~/.MMSA-FET/visualize"
+    }
+  },
+  "text": {
+    "model": "bert",
+    "device": "cpu",
+    "pretrained": "bert-base-chinese",
+    "args": {}
+  }
+}

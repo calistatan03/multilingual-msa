@@ -1,0 +1,157 @@
+========================================
+Cluster Analysis PBS Job Started
+Time       : Mon Mar  9 20:07:42 +08 2026
+Host       : cnode-33-43-27
+Job ID     : 375708.venus01
+Workdir    : /home/svu/e0968015/analysis
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260309_200742_375708.venus01.log
+========================================
+[INFO] PBS queue info
+  PBS_QUEUE      = parallel
+  PBS_NODEFILE   = /var/spool/pbs/aux/375708.venus01
+  PBS_NP         = N/A
+[INFO] Allocated nodes:
+     12 cnode-33-43-27
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[INFO] Python path: /home/svu/e0968015/.conda/envs/msa-unimodal/bin/python
+[INFO] Python version: Python 3.10.6
+[INFO] SCRIPT_PATH = /home/svu/e0968015/analysis/clustering.py
+[INFO] ROOT_DIR    = /hpctmp/scratch/e0968015/chsims/FusionRuns
+[INFO] OUT_DIR     = /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2
+[INFO] Running pre-flight checks...
+[INFO] Listing matching run folders (preview):
+/hpctmp/scratch/e0968015/chsims/FusionRuns/audio_guided_attn_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/bibimodal_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/early_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/graph_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/kernel_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/lowrank_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/posthoc_audio_vs_vision_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/tensor_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/text_guided_attention_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/trimodal_attention_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/vision_guided_attn_run3
+[INFO] Starting clustering analysis...
+/home/svu/e0968015/.conda/envs/msa-unimodal/lib/python3.10/site-packages/sklearn/manifold/_t_sne.py:996: FutureWarning: The PCA initialization in TSNE will change to have the standard deviation of PC1 equal to 1e-4 in 1.2. This will ensure better convergence.
+  warnings.warn(
+/home/svu/e0968015/.conda/envs/msa-unimodal/lib/python3.10/site-packages/sklearn/manifold/_t_sne.py:996: FutureWarning: The PCA initialization in TSNE will change to have the standard deviation of PC1 equal to 1e-4 in 1.2. This will ensure better convergence.
+  warnings.warn(
+[scan] Finding preds_test.json files...
+[scan] Found 8 files
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/audio_guided_attn_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/bibimodal_fusion_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/early_fusion_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/kernel_fusion_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/lowrank_fusion_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/text_guided_attention_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/trimodal_attention_run3/preds_test.json
+  - /hpctmp/scratch/e0968015/chsims/FusionRuns/vision_guided_attn_run3/preds_test.json
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/audio_guided_attn_run3/preds_test.json -> Audio-Guided Attention (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/bibimodal_fusion_run3/preds_test.json -> Bi-modal Fusion (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/early_fusion_run3/preds_test.json -> Early Fusion (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/kernel_fusion_run3/preds_test.json -> Kernel Fusion (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/lowrank_fusion_run3/preds_test.json -> Low-Rank Fusion (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/text_guided_attention_run3/preds_test.json -> Text-Guided Attention (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/trimodal_attention_run3/preds_test.json -> Tri-Modal Attention (1034 rows)
+[load] /hpctmp/scratch/e0968015/chsims/FusionRuns/vision_guided_attn_run3/preds_test.json -> Vision-Guided Attention (1034 rows)
+
+[summary] Loaded methods by dataset/audio_dim:
+  - chsims A35: 8 methods -> ['Audio-Guided Attention', 'Bi-modal Fusion', 'Early Fusion', 'Kernel Fusion', 'Low-Rank Fusion', 'Text-Guided Attention', 'Tri-Modal Attention', 'Vision-Guided Attention']
+
+[group] chsims_A35 | rows=8272
+[group] methods: ['Audio-Guided Attention', 'Bi-modal Fusion', 'Early Fusion', 'Kernel Fusion', 'Low-Rank Fusion', 'Text-Guided Attention', 'Tri-Modal Attention', 'Vision-Guided Attention']
+
+  [mode] abs
+wide_df keys: Index(['id', 'raw_text', 'y_true', 'dataset', 'audio_dim',
+       'Audio-Guided Attention', 'Bi-modal Fusion', 'Early Fusion',
+       'Kernel Fusion', 'Low-Rank Fusion', 'Text-Guided Attention',
+       'Tri-Modal Attention', 'Vision-Guided Attention'],
+      dtype='object')
+  [matrix] X shape = (1034, 8) | methods=8
+wide_df keys: Index(['id', 'raw_text', 'y_true', 'dataset', 'audio_dim',
+       'Audio-Guided Attention', 'Bi-modal Fusion', 'Early Fusion',
+       'Kernel Fusion', 'Low-Rank Fusion', 'Text-Guided Attention',
+       'Tri-Modal Attention', 'Vision-Guided Attention', 'feature_mean',
+       'feature_std', 'feature_min', 'feature_max', 'feature_range',
+       'hardness_score', 'model_disagreement', 'best_method_on_utterance',
+       'worst_method_on_utterance'],
+      dtype='object')
+  [done] Saved outputs to /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35
+  [clusters] sizes:
+ cluster  size      pct
+       0   668 0.646035
+       1    97 0.093810
+       2   269 0.260155
+
+  [mode] signed
+wide_df keys: Index(['id', 'raw_text', 'y_true', 'dataset', 'audio_dim',
+       'Audio-Guided Attention', 'Bi-modal Fusion', 'Early Fusion',
+       'Kernel Fusion', 'Low-Rank Fusion', 'Text-Guided Attention',
+       'Tri-Modal Attention', 'Vision-Guided Attention'],
+      dtype='object')
+  [matrix] X shape = (1034, 8) | methods=8
+wide_df keys: Index(['id', 'raw_text', 'y_true', 'dataset', 'audio_dim',
+       'Audio-Guided Attention', 'Bi-modal Fusion', 'Early Fusion',
+       'Kernel Fusion', 'Low-Rank Fusion', 'Text-Guided Attention',
+       'Tri-Modal Attention', 'Vision-Guided Attention', 'feature_mean',
+       'feature_std', 'feature_min', 'feature_max', 'feature_range',
+       'hardness_score', 'model_disagreement', 'best_method_on_utterance',
+       'worst_method_on_utterance'],
+      dtype='object')
+  [done] Saved outputs to /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35
+  [clusters] sizes:
+ cluster  size     pct
+       0   184 0.17795
+       1   274 0.26499
+       2   576 0.55706
+
+[done] Clustering analysis complete.
+[INFO] Python exit status: 0
+[INFO] Runtime (s): 19
+[INFO] Output files in /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2:
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster0_easiest.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster0_examples.txt
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster0_top_disagreement.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster0_top_hard.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster1_easiest.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster1_examples.txt
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster1_top_disagreement.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster1_top_hard.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster2_easiest.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster2_examples.txt
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster2_top_disagreement.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster2_top_hard.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster_centroids.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_clustered_utterances.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_clusters_pca.png
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_clusters_tsne.png
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_cluster_summary.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_method_feature_stats.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/abs_pca_variance.png
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster0_easiest.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster0_examples.txt
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster0_top_disagreement.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster0_top_hard.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster1_easiest.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster1_examples.txt
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster1_top_disagreement.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster1_top_hard.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster2_easiest.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster2_examples.txt
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster2_top_disagreement.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster2_top_hard.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster_centroids.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_clustered_utterances.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_clusters_pca.png
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_clusters_tsne.png
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_cluster_summary.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_method_feature_stats.csv
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2/chsims_A35/signed_pca_variance.png
+========================================
+Cluster Analysis PBS Job Ended
+Time       : Mon Mar  9 20:08:08 +08 2026
+Exit status: 0
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260309_200742_375708.venus01.log
+========================================

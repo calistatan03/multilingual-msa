@@ -1,0 +1,105 @@
+#!/bin/bash
+#PBS -P mosei_msa_fet
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=16gb
+#PBS -j oe
+#PBS -N msa_fet_oneclip
+
+set -euo pipefail
+cd "$PBS_O_WORKDIR" || exit 1
+
+# ----------------------------
+# paths you should EDIT
+# ----------------------------
+PROJECT_DIR="/home/svu/e0968015/feat_extraction/mosei"
+CONFIG="${PROJECT_DIR}/mosei_fet.json"
+
+# point this to ONE mp4 clip you want to test
+# (example path – replace with your real mp4)
+INPUT_MP4="/hpctmp/scratch/e0968015/mosei/Raw/zhNksSReaQk/9.mp4"
+
+# output files
+OUT_DIR="/hpctmp/scratch/e0968015/debug_oneclip"
+OUT_PKL="${OUT_DIR}/oneclip_features.pkl"
+
+mkdir -p "${OUT_DIR}" "${PROJECT_DIR}/logs"
+LOG_FILE="${PROJECT_DIR}/logs/oneclip.${PBS_JOBID:-manual}.$(date +%Y%m%d_%H%M%S).log"
+
+# stream logs live to file + stdout/stderr
+exec > >(stdbuf -oL -eL tee -a "${LOG_FILE}") 2>&1
+
+echo "[info] Job ID: ${PBS_JOBID:-N/A}"
+echo "[info] Host: $(hostname)"
+echo "[info] INPUT_MP4: ${INPUT_MP4}"
+echo "[info] CONFIG: ${CONFIG}"
+echo "[info] OUT_PKL: ${OUT_PKL}"
+echo "[info] LOG_FILE: ${LOG_FILE}"
+
+module purge || true
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+set +u
+source activate msa-fet
+set -u
+
+echo "[info] python: $(which python)"
+python -V
+python -c "import MSA_FET; print('[info] MSA_FET import ok')"
+
+# ----------------------------
+# keep caches + MMSA-FET tmp off /home
+# ----------------------------
+export HF_HOME="/hpctmp/scratch/e0968015/hf_home"
+export TRANSFORMERS_CACHE="${HF_HOME}/transformers"
+export HF_DATASETS_CACHE="${HF_HOME}/datasets"
+export TORCH_HOME="${HF_HOME}/torch"
+mkdir -p "$TRANSFORMERS_CACHE" "$HF_DATASETS_CACHE" "$TORCH_HOME"
+
+# IMPORTANT: force MMSA-FET home + tmp to scratch so it doesn't use /home
+export MMSA_FET_HOME="/hpctmp/scratch/e0968015/.MMSA-FET"
+export TMPDIR="${MMSA_FET_HOME}/tmp"
+mkdir -p "${MMSA_FET_HOME}/tmp" "${MMSA_FET_HOME}/log"
+
+# ----------------------------
+# run ONE clip
+# ----------------------------
+python - <<'PY'
+import os
+import pickle
+from MSA_FET import FeatureExtractionTool
+
+CONFIG = "/home/svu/e0968015/feat_extraction/mosei/mosei_fet.json"
+INPUT_MP4 = "/hpctmp/scratch/e0968015/mosei/Raw/zhNksSReaQk/9.mp4"
+OUT_PKL = "/hpctmp/scratch/e0968015/debug_oneclip/oneclip_features.pkl"
+
+assert os.path.exists(CONFIG), f"Missing config: {CONFIG}"
+assert os.path.exists(INPUT_MP4), f"Missing mp4: {INPUT_MP4}"
+
+print("[info] MMSA_FET_HOME:", os.environ.get("MMSA_FET_HOME"))
+print("[info] TMPDIR:", os.environ.get("TMPDIR"))
+
+fet = FeatureExtractionTool(CONFIG)
+
+# run_single returns a dict of extracted features for audio/video/text (depending on config)
+feat = fet.run_single(INPUT_MP4)
+
+print("[ok] run_single finished")
+print("[info] top-level keys:", list(feat.keys()) if isinstance(feat, dict) else type(feat))
+
+with open(OUT_PKL, "wb") as f:
+    pickle.dump(feat, f)
+
+print("[done] wrote:", OUT_PKL)
+
+# Print where temp files SHOULD be for this run (won't stop cleanup, but helps you locate it fast)
+tmp = os.environ.get("TMPDIR") or os.path.join(os.path.expanduser("~"), ".MMSA-FET", "tmp")
+print("[info] tmp base:", tmp)
+PY
+
+echo "[done] single-clip PBS job finished"
+echo "[info] If tmp files are being deleted too fast, rerun and SSH in to watch TMPDIR live:"
+echo "       ls -lh ${TMPDIR} | tail -n 30"
+

@@ -1,0 +1,26 @@
+========================================
+Audio-Vision Results Analysis PBS Job Started
+Time	 : Mon Mar  9 11:10:41 +08 2026
+Host	 : cnode-33-43-27
+Job ID     : 375551.venus01
+Workdir    : /home/svu/e0968015/analysis
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260309_111041_375551.venus01.log
+========================================
+[INFO] PBS queue info
+  PBS_QUEUE      = parallel
+  PBS_NODEFILE   = /var/spool/pbs/aux/375551.venus01
+  PBS_NP         = N/A
+[INFO] Allocated nodes:
+     12 cnode-33-43-27
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[INFO] Python path: /home/svu/e0968015/.conda/envs/msa-unimodal/bin/python
+[INFO] Python version: Python 3.10.6
+[done] wrote:
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_bin_metrics_audio.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_bin_metrics_vision.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_bin_metrics_side_by_side.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_audio_win_rate_by_bin.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_top_audio_wins.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_top_vision_wins.csv
+  /hpctmp/scratch/e0968015/mosei/FusionRuns/posthoc_audio_vs_vision_run3/mosei_A35_aligned_audio_vs_vision.csv

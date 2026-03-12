@@ -1,0 +1,23 @@
+========================================
+Cluster Analysis PBS Job Started
+Time       : Mon Mar  9 17:11:11 +08 2026
+Host       : cnode-33-43-27
+Job ID     : 375655.venus01
+Workdir    : /home/svu/e0968015/analysis
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260309_171111_375655.venus01.log
+========================================
+[INFO] PBS queue info
+  PBS_QUEUE      = parallel
+  PBS_NODEFILE   = /var/spool/pbs/aux/375655.venus01
+  PBS_NP         = N/A
+[INFO] Allocated nodes:
+     12 cnode-33-43-27
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[INFO] Python path: /home/svu/e0968015/.conda/envs/msa-unimodal/bin/python
+[INFO] Python version: Python 3.10.6
+[INFO] SCRIPT_PATH = /home/svu/e0968015/experiments/clustering.py
+[INFO] ROOT_DIR    = /hpctmp/scratch/e0968015/chsims/FusionRuns
+[INFO] OUT_DIR     = /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run1
+[INFO] Running pre-flight checks...
+[ERROR] Script not found: /home/svu/e0968015/experiments/clustering.py

@@ -1,0 +1,146 @@
+[info] Job ID: 315507.venus01
+[info] Host: cnode-33-43-38
+[info] Project dir: /home/svu/e0968015/unimodal
+[info] Dataset dir: /hpctmp/scratch/e0968015/chsims
+[info] Pickle: /hpctmp/scratch/e0968015/chsims/Processed/features.pkl
+[info] Output dir: /hpctmp/scratch/e0968015/chsims
+[info] Env: msa-unimodal
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[info] python: /home/svu/e0968015/.conda/envs/msa-unimodal/bin/python
+Python 3.10.6
+[info] torch ok | version: 2.6.0+cu124 | cuda: False
+[info] features.pkl exists: /hpctmp/scratch/e0968015/chsims/Processed/features.pkl
+Extracted feature dimensions: 
+Audio: (456, 400, 25)
+Visual: (456, 47, 1629)
+Text: (456, 39, 768)
+==============================
+[info] Starting CH-SIMS unimodal: text
+==============================
+{"epoch": 1, "train_mae": 0.6102978309919668, "val_mae": 0.6080208849488643, "val_corr": 0.04970478935204842}
+{"epoch": 2, "train_mae": 0.6074581562086593, "val_mae": 0.6062477178740919, "val_corr": 0.031936262885517916}
+{"epoch": 3, "train_mae": 0.605344413324844, "val_mae": 0.6050158665891279, "val_corr": 0.023222875552182703}
+{"epoch": 4, "train_mae": 0.6042972068453945, "val_mae": 0.6048905598489862, "val_corr": 0.01863138190856665}
+{"epoch": 5, "train_mae": 0.6025435896806939, "val_mae": 0.6048083368100619, "val_corr": 0.010300163783341313}
+{"epoch": 6, "train_mae": 0.6016016138154406, "val_mae": 0.6049264376623589, "val_corr": 0.010808983032540864}
+{"epoch": 7, "train_mae": 0.6007640299408935, "val_mae": 0.604862256008282, "val_corr": 0.011867649925465403}
+{"epoch": 8, "train_mae": 0.6012759492840878, "val_mae": 0.6047772639676144, "val_corr": 0.005634440095866508}
+{"epoch": 9, "train_mae": 0.5992420731588851, "val_mae": 0.6046972274780273, "val_corr": 0.006725870560570705}
+{"epoch": 10, "train_mae": 0.5994012459766033, "val_mae": 0.6047436563592208, "val_corr": -0.000683334942897725}
+{"epoch": 11, "train_mae": 0.5981609648050263, "val_mae": 0.6043214662033215, "val_corr": 0.01254603834671881}
+{"epoch": 12, "train_mae": 0.598499993945277, "val_mae": 0.6042462388674418, "val_corr": 0.01812879299417286}
+{"epoch": 13, "train_mae": 0.5983002483844757, "val_mae": 0.6046581080085353, "val_corr": -2.0396680233988196e-05}
+{"epoch": 14, "train_mae": 0.5981131729691528, "val_mae": 0.604192434695729, "val_corr": 0.01170583539678001}
+{"epoch": 15, "train_mae": 0.5983918787435044, "val_mae": 0.6039244783552069, "val_corr": 0.012110273790669167}
+{"epoch": 16, "train_mae": 0.5970875787180524, "val_mae": 0.6039508455678037, "val_corr": 0.003387075976067673}
+{"epoch": 17, "train_mae": 0.5975828565830408, "val_mae": 0.6043738555489925, "val_corr": 0.0011574177752564226}
+{"epoch": 18, "train_mae": 0.5969946710176246, "val_mae": 0.6036881846294069, "val_corr": 0.011461794605573207}
+{"epoch": 19, "train_mae": 0.5968464723853177, "val_mae": 0.6038187219385516, "val_corr": -0.0023375124981886205}
+{"epoch": 20, "train_mae": 0.5969028015469395, "val_mae": 0.6036542507640102, "val_corr": 0.0009286602843298138}
+{"epoch": 21, "train_mae": 0.5959273646044176, "val_mae": 0.6034470984810277, "val_corr": 0.006502942554595086}
+{"epoch": 22, "train_mae": 0.596806502619455, "val_mae": 0.6031549520659865, "val_corr": 0.0032805849362608584}
+{"epoch": 23, "train_mae": 0.5965714128904565, "val_mae": 0.6033827453328852, "val_corr": -0.0017091065479948261}
+{"epoch": 24, "train_mae": 0.5956531970999962, "val_mae": 0.602842088331256, "val_corr": 0.011349679060491004}
+{"epoch": 25, "train_mae": 0.5957115126210589, "val_mae": 0.603098333927623, "val_corr": 0.002586727010554223}
+{"epoch": 26, "train_mae": 0.5958193526711575, "val_mae": 0.6024317406771476, "val_corr": 0.015462316632399222}
+{"epoch": 27, "train_mae": 0.5961490807145141, "val_mae": 0.6029090002963418, "val_corr": -0.0009446793487974975}
+{"epoch": 28, "train_mae": 0.5967356472514397, "val_mae": 0.6021932781788341, "val_corr": 0.017610110738084793}
+{"epoch": 29, "train_mae": 0.5958775212598402, "val_mae": 0.6021183812827394, "val_corr": 0.02002575474159592}
+{"epoch": 30, "train_mae": 0.5949492960475212, "val_mae": 0.6022990251842298, "val_corr": 0.010687694525179425}
+DONE: {
+  "dataset": "chsims",
+  "modality": "text",
+  "best_val_mae": 0.6021183812827394,
+  "test_mae": 0.6011954386855111,
+  "test_corr": 0.049373905656754626
+}
+[info] Finished CH-SIMS unimodal: text
+==============================
+[info] Starting CH-SIMS unimodal: audio
+==============================
+/home/svu/e0968015/.conda/envs/msa-unimodal/lib/python3.10/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+{"epoch": 1, "train_mae": 108.85689101108285, "val_mae": 51.122149216501334, "val_corr": -0.010590392525510042}
+{"epoch": 2, "train_mae": 80.74947995917742, "val_mae": 40.1768654271176, "val_corr": -0.006557857457524439}
+{"epoch": 3, "train_mae": 76.69314805851427, "val_mae": 35.83195572568659, "val_corr": -0.007812113682017452}
+{"epoch": 4, "train_mae": 71.83391996871593, "val_mae": 30.16518549333539, "val_corr": -0.011975958727027634}
+{"epoch": 5, "train_mae": 68.13730062440385, "val_mae": 25.827811224418774, "val_corr": -0.014461290214885186}
+{"epoch": 6, "train_mae": 69.04917783515398, "val_mae": 22.960769218310976, "val_corr": -0.01689765101533537}
+{"epoch": 7, "train_mae": 64.12308475583099, "val_mae": 18.644010895176937, "val_corr": -0.02334105582881326}
+{"epoch": 8, "train_mae": 64.64164077403933, "val_mae": 18.36090412474515, "val_corr": -0.023517308871259725}
+{"epoch": 9, "train_mae": 61.542180438374366, "val_mae": 15.614416289747806, "val_corr": -0.029924107574633124}
+{"epoch": 10, "train_mae": 63.03466672675554, "val_mae": 13.738420185289884, "val_corr": -0.03493502069075813}
+{"epoch": 11, "train_mae": 64.71773786323016, "val_mae": 10.604538800423605, "val_corr": -0.047096725732505125}
+{"epoch": 12, "train_mae": 62.18428119393282, "val_mae": 9.271221612629137, "val_corr": -0.05366957536507487}
+{"epoch": 13, "train_mae": 61.81173661697743, "val_mae": 8.273924944693583, "val_corr": -0.06271813986179904}
+{"epoch": 14, "train_mae": 60.403849756994916, "val_mae": 8.358870757253547, "val_corr": -0.06004900594026847}
+{"epoch": 15, "train_mae": 59.542499897091886, "val_mae": 8.67524192207738, "val_corr": -0.06005555293476041}
+{"epoch": 16, "train_mae": 58.12383243649505, "val_mae": 8.018551709359151, "val_corr": -0.06610058054883078}
+{"epoch": 17, "train_mae": 63.13809727513513, "val_mae": 9.603133670070715, "val_corr": -0.05915270304668779}
+{"epoch": 18, "train_mae": 59.357713743697765, "val_mae": 7.395785800197668, "val_corr": -0.06379090695223542}
+{"epoch": 19, "train_mae": 57.39671937809434, "val_mae": 7.181496126609936, "val_corr": -0.06445005456911199}
+{"epoch": 20, "train_mae": 59.78728520592978, "val_mae": 9.23890240987142, "val_corr": -0.05737195334634144}
+{"epoch": 21, "train_mae": 58.64937795594681, "val_mae": 9.333417256673178, "val_corr": -0.056714732880231045}
+{"epoch": 22, "train_mae": 58.52597161226495, "val_mae": 6.896740361263878, "val_corr": -0.0629144919983779}
+{"epoch": 23, "train_mae": 57.94372212609579, "val_mae": 6.839772968961482, "val_corr": -0.0627947405595855}
+{"epoch": 24, "train_mae": 57.84288947526799, "val_mae": 6.432313115973222, "val_corr": -0.06188665907479973}
+{"epoch": 25, "train_mae": 55.50546229162882, "val_mae": 6.393354792343943, "val_corr": -0.06158918538227265}
+{"epoch": 26, "train_mae": 56.88814926147461, "val_mae": 6.5888470264903285, "val_corr": -0.06076461830372269}
+{"epoch": 27, "train_mae": 57.169514323389805, "val_mae": 6.2676070447553665, "val_corr": -0.059283474026132946}
+{"epoch": 28, "train_mae": 57.49868880870731, "val_mae": 6.919890780197947, "val_corr": -0.05614628112608269}
+{"epoch": 29, "train_mae": 55.858052187187724, "val_mae": 5.953864750109221, "val_corr": -0.05436242470540541}
+{"epoch": 30, "train_mae": 54.44214151071947, "val_mae": 6.309055612798323, "val_corr": -0.05459473148610656}
+DONE: {
+  "dataset": "chsims",
+  "modality": "audio",
+  "best_val_mae": 5.953864750109221,
+  "test_mae": 6.135030867495213,
+  "test_corr": -0.06694898574978364
+}
+[info] Finished CH-SIMS unimodal: audio
+==============================
+[info] Starting CH-SIMS unimodal: vision
+==============================
+/home/svu/e0968015/.conda/envs/msa-unimodal/lib/python3.10/site-packages/torch/nn/modules/transformer.py:385: UserWarning: enable_nested_tensor is True, but self.use_nested_tensor is False because encoder_layer.norm_first was True
+  warnings.warn(
+{"epoch": 1, "train_mae": 0.6196766142235246, "val_mae": 0.629323889288986, "val_corr": 0.07032573981941798}
+{"epoch": 2, "train_mae": 0.6002527419910875, "val_mae": 0.6009401009793867, "val_corr": 0.07998469422605835}
+{"epoch": 3, "train_mae": 0.6099664936232012, "val_mae": 0.5946484448616964, "val_corr": 0.06831869706687899}
+{"epoch": 4, "train_mae": 0.6056309772092242, "val_mae": 0.6103767470309609, "val_corr": 0.0786576728962966}
+{"epoch": 5, "train_mae": 0.6008928515190302, "val_mae": 0.6030655471902144, "val_corr": 0.08661047873899809}
+{"epoch": 6, "train_mae": 0.5902267687542494, "val_mae": 0.5956208036656965, "val_corr": 0.07505162570847554}
+{"epoch": 7, "train_mae": 0.5935186535813087, "val_mae": 0.5893892875888891, "val_corr": 0.08465977296870415}
+{"epoch": 8, "train_mae": 0.5954893432384314, "val_mae": 0.5982783907338193, "val_corr": 0.07404040494263327}
+{"epoch": 9, "train_mae": 0.6007889335931733, "val_mae": 0.6535746779358178, "val_corr": 0.06134975953617193}
+{"epoch": 10, "train_mae": 0.6174426210481067, "val_mae": 0.6334172518629777, "val_corr": 0.08693527375456346}
+{"epoch": 11, "train_mae": 0.6169634128725806, "val_mae": 0.5968591131662068, "val_corr": 0.0625418886080374}
+{"epoch": 12, "train_mae": 0.5997422684070676, "val_mae": 0.5981695620637191, "val_corr": 0.08143120853484527}
+{"epoch": 13, "train_mae": 0.5887339974558631, "val_mae": 0.593149505163494, "val_corr": 0.0775561807602976}
+{"epoch": 14, "train_mae": 0.5903694359369056, "val_mae": 0.5888840096038684, "val_corr": 0.08030179613275794}
+{"epoch": 15, "train_mae": 0.5856390436028325, "val_mae": 0.592186426907255, "val_corr": 0.07411404970429325}
+{"epoch": 16, "train_mae": 0.5871460188266843, "val_mae": 0.5924707651138306, "val_corr": 0.0742358138072234}
+{"epoch": 17, "train_mae": 0.5889690740163936, "val_mae": 0.5908262823757372, "val_corr": 0.07868680415960518}
+{"epoch": 18, "train_mae": 0.6043213335580604, "val_mae": 0.5910353273676153, "val_corr": 0.06994483678087238}
+{"epoch": 19, "train_mae": 0.5845055143500484, "val_mae": 0.5903300538397672, "val_corr": 0.07923736295889647}
+{"epoch": 20, "train_mae": 0.586490556251171, "val_mae": 0.5917550262651945, "val_corr": 0.07779527002908525}
+{"epoch": 21, "train_mae": 0.5877508756726287, "val_mae": 0.5896310471651847, "val_corr": 0.0814879923591226}
+{"epoch": 22, "train_mae": 0.5790054687233859, "val_mae": 0.5900681688074481, "val_corr": 0.08476891171554667}
+{"epoch": 23, "train_mae": 0.5873388551002325, "val_mae": 0.591812623174567, "val_corr": 0.0834962847799438}
+{"epoch": 24, "train_mae": 0.5878836401673251, "val_mae": 0.586591617057198, "val_corr": 0.09084958238618808}
+{"epoch": 25, "train_mae": 0.5851383583490238, "val_mae": 0.6029170657459059, "val_corr": 0.09573569514431361}
+{"epoch": 26, "train_mae": 0.5878049731254578, "val_mae": 0.5913374559921131, "val_corr": 0.08238854369372141}
+{"epoch": 27, "train_mae": 0.585165856189506, "val_mae": 0.5902446330639354, "val_corr": 0.08842384688873672}
+{"epoch": 28, "train_mae": 0.5916078374829403, "val_mae": 0.6102200443284553, "val_corr": 0.07836642683430545}
+{"epoch": 29, "train_mae": 0.5893939227558845, "val_mae": 0.591896416848166, "val_corr": 0.08447375294864846}
+{"epoch": 30, "train_mae": 0.5884536546330119, "val_mae": 0.5931590973285207, "val_corr": 0.0755040603492931}
+DONE: {
+  "dataset": "chsims",
+  "modality": "vision",
+  "best_val_mae": 0.586591617057198,
+  "test_mae": 0.5862336148318368,
+  "test_corr": 0.12284278126201216
+}
+[info] Finished CH-SIMS unimodal: vision
+[info] All CH-SIMS unimodal runs completed.
+[info] Metrics: /hpctmp/scratch/e0968015/chsims/metrics_chsims_*.json

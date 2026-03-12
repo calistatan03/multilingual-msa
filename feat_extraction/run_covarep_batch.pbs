@@ -1,0 +1,29 @@
+#!/bin/bash
+#PBS -P covarep_batch
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=32gb
+#PBS -o /home/svu/e0968015/feat_extraction/logs/covarep.out
+#PBS -e /home/svu/e0968015/feat_extraction/logs/covarep.err
+#PBS -N covarep_batch
+
+set -euo pipefail
+
+PROJECT_DIR="/hpctmp/scratch/e0968015/mosei"
+MATLAB_BIN="/app1/common/bin/matlab"
+
+cd "${PROJECT_DIR}"
+
+mkdir -p "${PROJECT_DIR}/logs"
+
+LOG_DIR="${PROJECT_DIR}/logs"
+mkdir -p "${LOG_DIR}"
+
+RUN_LOG="${LOG_DIR}/run.${PBS_JOBID:-manual}.$(date +%Y%m%d_%H%M%S).log"
+
+# stream both stdout+stderr to console AND to RUN_LOG (line-buffered)
+exec > >(stdbuf -oL -eL tee -a "${RUN_LOG}") 2>&1
+
+echo "[info] pwd: $(pwd)"
+echo "[info] matlab: ${MATLAB_BIN}"
+
+"${MATLAB_BIN}" -nodisplay -nosplash -r "run('run_covarep_batch.m'); exit"

@@ -1,0 +1,40 @@
+========================================
+Cluster Analysis PBS Job Started
+Time       : Mon Mar  9 21:59:30 +08 2026
+Host       : cnode-33-43-35
+Job ID     : 375732.venus01
+Workdir    : /home/svu/e0968015/analysis
+Log file   : /home/svu/e0968015/analysis/logs/cluster_20260309_215930_375732.venus01.log
+========================================
+[INFO] PBS queue info
+  PBS_QUEUE      = parallel
+  PBS_NODEFILE   = /var/spool/pbs/aux/375732.venus01
+  PBS_NP         = N/A
+[INFO] Allocated nodes:
+     12 cnode-33-43-35
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+[INFO] Python path: /home/svu/e0968015/.conda/envs/msa-fet/bin/python
+[INFO] Python version: Python 3.9.13
+[INFO] SCRIPT_PATH = /home/svu/e0968015/analysis/cluster_analysis.py
+[INFO] ROOT_DIR    = /hpctmp/scratch/e0968015/chsims/FusionRuns
+[INFO] OUT_DIR     = /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run2
+[INFO] Running pre-flight checks...
+[INFO] Listing matching run folders (preview):
+/hpctmp/scratch/e0968015/chsims/FusionRuns/audio_guided_attn_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/bibimodal_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_chsims_a35_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/early_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/graph_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/kernel_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/lowrank_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/posthoc_audio_vs_vision_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/tensor_fusion_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/text_guided_attention_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/trimodal_attention_run3
+/hpctmp/scratch/e0968015/chsims/FusionRuns/vision_guided_attn_run3
+[INFO] Starting clustering analysis...
+Traceback (most recent call last):
+  File "/home/svu/e0968015/analysis/cluster_analysis.py", line 52, in <module>
+    import nltk
+ModuleNotFoundError: No module named 'nltk'

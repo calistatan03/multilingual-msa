@@ -1,0 +1,30 @@
+JobID: 339403.venus01
+Host: cnode-33-43-22
+Start: Mon Feb  9 00:50:34 +08 2026
+Workdir: /home/svu/e0968015/feat_extraction/mosei
+
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+python is: /app1/anaconda/3/bin/python
+Python 3.6.1 :: Anaconda 4.4.0 (64-bit)
+=== After label filter [-2.0, 2.0] ===
+train: raw  16326 | kept  15208 | unique videos 2240
+valid: raw   1871 | kept   1774 | unique videos  300
+test : raw   4659 | kept   4393 | unique videos  674
+
+=== Video overlaps in filtered pool (should be 0 for MOSEI) ===
+train & valid: 0
+train & test : 0
+valid & test : 0
+
+train: chose 105 videos (quota 105) | utterances available 2802 | method=top_by_count
+valid: chose 40 videos (quota 40) | utterances available 652 | method=top_by_count
+test: chose 50 videos (quota 50) | utterances available 1094 | method=top_by_count
+
+=== Final sample stats ===
+train: utterances 2722 | unique videos 105 (target 105)
+valid: utterances  647 | unique videos  40 (target 40)
+test : utterances 1034 | unique videos  50 (target 50)
+
+Wrote: data/label_sampled.csv
+Total rows: 4403

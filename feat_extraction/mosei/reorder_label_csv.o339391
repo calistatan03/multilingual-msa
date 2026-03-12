@@ -1,0 +1,16 @@
+[Mon Feb  9 00:13:25 +08 2026] Input : /hpctmp/scratch/e0968015/mosei/label.csv
+[Mon Feb  9 00:13:25 +08 2026] Output: /hpctmp/scratch/e0968015/mosei/label_reordered.csv
+      ======================================================================================
+     Resource Usage on 2026-02-09 00:13:26.323263:
+     JobId: 339391.venus01  				 Project: reorder_label_csv 
+     Submission Host: atlas8-c01 
+     Exit Status: 1
+     NCPUs Requested: 12 				 NCPUs Used: 12
+     Memory Requested: 160gb 				 Memory Used: 0b 
+     Vmem Used: 0kb
+     CPU Time Used: 00:00:00 
+     Walltime requested: 240:00:00 			 Walltime Used: 00:00:01
+     Submit Time:  Mon Feb  9 00:13:22 2026 		 Start Time: Mon Feb  9 00:13:25 2026 
+     End Time: Mon Feb  9 00:13:26 2026 
+     Execution Nodes Used: (cnode-33-43-28:ncpus=12:mem=167772160kb)
+     ======================================================================================

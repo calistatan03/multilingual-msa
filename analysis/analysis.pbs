@@ -1,0 +1,120 @@
+#!/bin/bash
+#PBS -P results_analysis
+#PBS -q parallel
+#PBS -l select=1:ncpus=12:mpiprocs=12:mem=80gb
+#PBS -j oe
+#PBS -N results_analysis
+
+set -euo pipefail
+
+
+# --- move to submission directory ---
+cd "$PBS_O_WORKDIR" || exit 1
+
+# ----------------------------
+# Logging setup
+# ----------------------------
+LOG_DIR="$PBS_O_WORKDIR/logs"
+mkdir -p "$LOG_DIR"
+
+TS=$(date +"%Y%m%d_%H%M%S")
+JOB_TAG="${PBS_JOBID:-nojobid}"
+LOG_FILE="$LOG_DIR/cluster_${TS}_${JOB_TAG}.log"
+
+# Redirect ALL stdout/stderr to both terminal and log file
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+echo "========================================"
+echo "Cluster Analysis PBS Job Started"
+echo "Time       : $(date)"
+echo "Host       : $(hostname)"
+echo "Job ID     : ${PBS_JOBID:-N/A}"
+echo "Workdir    : $PBS_O_WORKDIR"
+echo "Log file   : $LOG_FILE"
+echo "========================================"
+
+# Optional: print useful PBS env info
+echo "[INFO] PBS queue info"
+echo "  PBS_QUEUE      = ${PBS_O_QUEUE:-N/A}"
+echo "  PBS_NODEFILE   = ${PBS_NODEFILE:-N/A}"
+echo "  PBS_NP         = ${PBS_NP:-N/A}"
+
+if [[ -n "${PBS_NODEFILE:-}" && -f "${PBS_NODEFILE}" ]]; then
+  echo "[INFO] Allocated nodes:"
+  cat "$PBS_NODEFILE" | sort | uniq -c
+fi
+
+# ----------------------------
+# Environment setup
+# ----------------------------
+
+module purge
+module load anaconda3
+
+unset PYTHONHOME
+unset PYTHONPATH
+
+# ---- conda ----
+set +u
+source activate msa-unimodal   # <-- your NEW env (rename if different)
+set -u
+
+echo "[INFO] Python path: $(which python)"
+echo "[INFO] Python version: $(python --version)"
+
+# ----------------------------
+# User-configurable paths
+# ----------------------------
+SCRIPT_PATH="/home/svu/e0968015/analysis/clustering.py"
+ROOT_DIR="/hpctmp/scratch/e0968015/mosei/FusionRuns"
+OUT_DIR="/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run6"
+
+echo "[INFO] SCRIPT_PATH = $SCRIPT_PATH"
+echo "[INFO] ROOT_DIR    = $ROOT_DIR"
+echo "[INFO] OUT_DIR     = $OUT_DIR"
+
+# Sanity checks before running
+echo "[INFO] Running pre-flight checks..."
+[[ -f "$SCRIPT_PATH" ]] || { echo "[ERROR] Script not found: $SCRIPT_PATH"; exit 1; }
+[[ -d "$ROOT_DIR" ]] || { echo "[ERROR] Root dir not found: $ROOT_DIR"; exit 1; }
+mkdir -p "$OUT_DIR"
+
+echo "[INFO] Listing matching run folders (preview):"
+find "$ROOT_DIR" -maxdepth 1 -type d -name '*_run3' | sort || true
+
+# ----------------------------
+# Run clustering script
+# ----------------------------
+echo "[INFO] Starting clustering analysis..."
+START_EPOCH=$(date +%s)
+
+python "$SCRIPT_PATH" \
+  --root "$ROOT_DIR" \
+  --out-dir "$OUT_DIR" \
+  --run-suffix run3 \
+  --dataset mosei \
+  --audio-dim 35 \
+  --mode both \
+  --n-clusters 8
+
+STATUS=$?
+END_EPOCH=$(date +%s)
+DURATION=$((END_EPOCH - START_EPOCH))
+
+echo "[INFO] Python exit status: $STATUS"
+echo "[INFO] Runtime (s): $DURATION"
+
+# ----------------------------
+# Post-run output summary
+# ----------------------------
+echo "[INFO] Output files in $OUT_DIR:"
+find "$OUT_DIR" -maxdepth 3 -type f | sort || true
+
+echo "========================================"
+echo "Cluster Analysis PBS Job Ended"
+echo "Time       : $(date)"
+echo "Exit status: $STATUS"
+echo "Log file   : $LOG_FILE"
+echo "========================================"
+
+exit $STATUS

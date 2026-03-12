@@ -1,0 +1,16 @@
+JobID: 339119.venus01
+Host: cnode-33-43-21
+Start: Sat Feb  7 16:55:09 +08 2026
+
+Loading anaconda3
+  Loading requirement: /app1/modules/root/NUSREC gcc-4.8.2
+Python 3.9.13
+Requirement already satisfied: pip in /home/svu/e0968015/.conda/envs/mosei-fet-dl/lib/python3.9/site-packages (26.0.1)
+CSV: /home/svu/e0968015/feat_extraction/mosei/data/label.csv
+Label column: label
+Count in [-2, 2]: 21375
+Total rows: 22856
+Non-numeric/empty labels skipped: 0
+Percentage: 93.52%
+
+End: Sat Feb  7 16:55:25 +08 2026
