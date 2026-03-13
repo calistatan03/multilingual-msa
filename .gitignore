@@ -12,3 +12,21 @@ venv/
 .env
 
 privatemodules/
+
+.MMSA-FET/
+.Xauthority
+.bash_history
+.bash_logout
+.bash_profile
+.bashrc
+.cache/
+.conda/
+.emacs
+.gitconfig
+.java/
+.k5login
+.matlab/
+.pki/
+.python_history
+.ssh/
+.vscode-server/
