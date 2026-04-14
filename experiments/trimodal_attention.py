@@ -100,6 +100,27 @@ class TriFANLikeSystem(nn.Module):
             nn.Dropout(dropout_head),
             nn.Linear(hidden_dim // 2, 1),
         )
+
+    def forward_features(self, text, audio, vision, audio_lengths, vision_lengths):
+        with torch.no_grad():
+            t_valid = (text.abs().sum(dim=-1) > 0)
+            text_lengths = t_valid.long().sum(dim=1)
+
+        a_seq, _ = self.audio_enc(audio, audio_lengths, return_seq=True)
+
+        v_u = self.vision_enc(vision, vision_lengths)
+        t_u = self.text_enc(text)
+
+        v_seq = v_u.unsqueeze(1)
+        t_seq = t_u.unsqueeze(1)
+
+        v_len = torch.ones_like(vision_lengths)
+        t_len = torch.ones_like(text_lengths)
+
+        fused = self.fuser(t_seq, a_seq, v_seq, t_len, audio_lengths, v_len)
+
+        return fused
+  
     def forward(self, text, audio, vision, audio_lengths, vision_lengths):
         """
         text: (B, Tt, 768)
@@ -108,23 +129,5 @@ class TriFANLikeSystem(nn.Module):
         audio_lengths: (B,)
         vision_lengths: (B,)
         """
-
-        # infer text lengths from padding (assuming padded tokens are all-zeros)
-        with torch.no_grad():
-            t_valid = (text.abs().sum(dim=-1) > 0)
-            text_lengths = t_valid.long().sum(dim=1)
-
-        # encoders must output sequences for attention fusion
-        a_seq, _ = self.audio_enc(audio, audio_lengths, return_seq=True)   # (B, Ta, D)
-
-        # TEMP workaround if your VisionEncoder/TextEncoder don't return sequences yet:
-        # treat them as length-1 "sequences" (still tri-modal cross-attn, but not over time)
-        v_u = self.vision_enc(vision, vision_lengths)                      # (B, D)
-        t_u = self.text_enc(text)                                          # (B, D)
-        v_seq = v_u.unsqueeze(1)                                           # (B, 1, D)
-        t_seq = t_u.unsqueeze(1)                                           # (B, 1, D)
-        v_len = torch.ones_like(vision_lengths)
-        t_len = torch.ones_like(text_lengths)
-
-        fused = self.fuser(t_seq, a_seq, v_seq, t_len, audio_lengths, v_len)
+        fused = self.forward_features(text, audio, vision, audio_lengths, vision_lengths)
         return self.head(fused).squeeze(-1)

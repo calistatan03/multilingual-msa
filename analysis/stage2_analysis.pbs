@@ -25,7 +25,7 @@ LOG_FILE="$LOG_DIR/cluster_${TS}_${JOB_TAG}.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "========================================"
-echo "Cluster Analysis PBS Job Started"
+echo "Stage 2 Cluster Analysis PBS Job Started"
 echo "Time       : $(date)"
 echo "Host       : $(hostname)"
 echo "Job ID     : ${PBS_JOBID:-N/A}"
@@ -65,22 +65,19 @@ echo "[INFO] Python version: $(python --version)"
 # ----------------------------
 # User-configurable paths
 # ----------------------------
-SCRIPT_PATH="/home/svu/e0968015/analysis/clustering_new.py"
-ROOT_DIR="/hpctmp/scratch/e0968015/mosei/FusionRuns"
-OUT_DIR="/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_a35_run6"
+SCRIPT_PATH="/home/svu/e0968015/analysis/stage2_clustering.py"
+IN_DIR="/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_a35_run6/mosei_A35/abs_clustered_utterances.csv"
+OUT_DIR="/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_a35_run6/stage2_clustering_abs_error_4"
 
 echo "[INFO] SCRIPT_PATH = $SCRIPT_PATH"
-echo "[INFO] ROOT_DIR    = $ROOT_DIR"
+echo "[INFO] IN_DIR    = $IN_DIR"
 echo "[INFO] OUT_DIR     = $OUT_DIR"
 
 # Sanity checks before running
 echo "[INFO] Running pre-flight checks..."
 [[ -f "$SCRIPT_PATH" ]] || { echo "[ERROR] Script not found: $SCRIPT_PATH"; exit 1; }
-[[ -d "$ROOT_DIR" ]] || { echo "[ERROR] Root dir not found: $ROOT_DIR"; exit 1; }
+[[ -f "$IN_DIR" ]] || { echo "[ERROR] In dir not found: $IN_DIR"; exit 1; }
 mkdir -p "$OUT_DIR"
-
-echo "[INFO] Listing matching run folders (preview):"
-find "$ROOT_DIR" -maxdepth 1 -type d -name '*_run3' | sort || true
 
 # ----------------------------
 # Run clustering script
@@ -89,13 +86,13 @@ echo "[INFO] Starting clustering analysis..."
 START_EPOCH=$(date +%s)
 
 python "$SCRIPT_PATH" \
-  --root "$ROOT_DIR" \
+  --in-csv "$IN_DIR" \
   --out-dir "$OUT_DIR" \
-  --run-suffix run3 \
-  --dataset mosei \
-  --audio-dim 35 \
-  --n-clusters 4
-
+  --clusters 0 3 \
+  --k2 4 \
+  --feature-space abs_error \
+  --standardize \
+  --tsne 
 
 STATUS=$?
 END_EPOCH=$(date +%s)

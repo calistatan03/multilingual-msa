@@ -56,12 +56,12 @@ unset PYTHONPATH
 
 # ---- conda ----
 set +u
-source activate msa-unimodal   # <-- your NEW env (rename if different)
+source activate msa-fet   # <-- your NEW env (rename if different)
 set -u
 
 echo "[INFO] Python path: $(which python)"
 echo "[INFO] Python version: $(python --version)"
 
-SCRIPT_PATH="/home/svu/e0968015/analysis/audio_vision_mosei.py"
+SCRIPT_PATH="/home/svu/e0968015/analysis/audio_vision_mosei_updated_2.py"
 
 python "$SCRIPT_PATH"

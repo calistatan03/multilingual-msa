@@ -69,34 +69,29 @@ def load_audio_from_mp4(mp4_path: str, sr: int = 16000) -> np.ndarray :
 # --------------------------
 def add_bins(df: pd.DataFrame) -> pd.DataFrame:
     """
-    5-class label grouping based on y_true values (rounded to 1dp):
-      - negative:        [-1.0, -0.8]
-      - weakly negative: [-0.6, -0.4, -0.2]
-      - neutral:         [ 0.0]
-      - weakly positive: [ 0.2,  0.4,  0.6]
-      - positive:        [ 0.8,  1.0]
+    Range-based 5-class grouping on y_true:
+
+      negative         : y <= -0.8
+      weakly_negative  : -0.8 < y < 0
+      neutral          : y == 0 (within eps tolerance)
+      weakly_positive  : 0 < y < 0.8
+      positive         : y >= 0.8
+
+    This avoids 'other' for continuous values like 0.1, 0.3, 0.7, etc.
     """
     df = df.copy()
-    y = df["y_true"].round(1)
+    y = pd.to_numeric(df["y_true"], errors="coerce")
 
-    mapping = {
-        -1.0: "negative",
-        -0.8: "negative",
-        -0.6: "weakly_negative",
-        -0.4: "weakly_negative",
-        -0.2: "weakly_negative",
-         0.0: "neutral",
-         0.2: "weakly_positive",
-         0.4: "weakly_positive",
-         0.6: "weakly_positive",
-         0.8: "positive",
-         1.0: "positive",
-    }
+    eps = 1e-8
+    cls = np.full(len(df), "other", dtype=object)
 
-    df["sentiment_class"] = y.map(mapping)
-    unknown = df["sentiment_class"].isna()
-    if unknown.any():
-        df.loc[unknown, "sentiment_class"] = "other"
+    cls[y <= -0.8] = "negative"
+    cls[(y > -0.8) & (y < -eps)] = "weakly_negative"
+    cls[np.isclose(y, 0.0, atol=1e-6)] = "neutral"
+    cls[(y > eps) & (y < 0.8)] = "weakly_positive"
+    cls[y >= 0.8] = "positive"
+
+    df["sentiment_class"] = cls
     return df
 
 
@@ -383,12 +378,12 @@ def main(
 
 if __name__ == "__main__":
     # -------- EDIT THESE PATHS --------
-    AUDIO_JSON = "/hpctmp/scratch/e0968015/chsims/FusionRuns/audio_guided_attn_run3/preds_test.json"
-    VISION_JSON = "/hpctmp/scratch/e0968015/chsims/FusionRuns/vision_guided_attn_run3/preds_test.json"
-    OUT_PREFIX = "/hpctmp/scratch/e0968015/chsims/FusionRuns/posthoc_audio_vs_vision_run3/chsims_A35"
+    AUDIO_JSON = "/hpctmp/scratch/e0968015/mosei/FusionRuns/audio_guided_attn_run3/preds_test.json"
+    VISION_JSON = "/hpctmp/scratch/e0968015/mosei/FusionRuns/vision_guided_attn_run3/preds_test.json"
+    OUT_PREFIX = "/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35"
 
     # CHSIMS raw clips root:
-    RAW_DIR = "/scratch/e0968015/chsims/Raw"
+    RAW_DIR = "/scratch/e0968015/mosei/Raw"
 
     os.makedirs(os.path.dirname(OUT_PREFIX), exist_ok=True)
     main(AUDIO_JSON, VISION_JSON, OUT_PREFIX, raw_dir=RAW_DIR, top_k=300, sr=16000)

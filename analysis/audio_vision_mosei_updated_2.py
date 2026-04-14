@@ -2,7 +2,11 @@
 import os
 import json
 import subprocess
+from collections import defaultdict
 from pathlib import Path
+
+import cv2
+import mediapipe as mp
 import numpy as np
 import pandas as pd
 import librosa
@@ -46,7 +50,7 @@ def try_extract_wav_with_ffmpeg(video_path: str, wav_path: str, sr: int = 16000)
         return False
 
 
-def load_audio_from_mp4(mp4_path: str, sr: int = 16000) -> np.ndarray :
+def load_audio_from_mp4(mp4_path: str, sr: int = 16000) -> np.ndarray:
     tmp_wav = str(Path(mp4_path).with_suffix(f".tmp{sr}.wav"))
     if try_extract_wav_with_ffmpeg(mp4_path, tmp_wav, sr=sr) and os.path.exists(tmp_wav):
         y, _ = librosa.load(tmp_wav, sr=sr, mono=True)
@@ -56,7 +60,6 @@ def load_audio_from_mp4(mp4_path: str, sr: int = 16000) -> np.ndarray :
             pass
         return y
 
-    # fallback (may fail depending on backend)
     try:
         y, _ = librosa.load(mp4_path, sr=sr, mono=True)
         return y
@@ -65,38 +68,35 @@ def load_audio_from_mp4(mp4_path: str, sr: int = 16000) -> np.ndarray :
 
 
 # --------------------------
+
+# --------------------------
 # Binning
 # --------------------------
 def add_bins(df: pd.DataFrame) -> pd.DataFrame:
     """
-    5-class label grouping based on y_true values (rounded to 1dp):
-      - negative:        [-1.0, -0.8]
-      - weakly negative: [-0.6, -0.4, -0.2]
-      - neutral:         [ 0.0]
-      - weakly positive: [ 0.2,  0.4,  0.6]
-      - positive:        [ 0.8,  1.0]
+    Range-based 5-class grouping on y_true:
+
+      negative         : y <= -0.8
+      weakly_negative  : -0.8 < y < 0
+      neutral          : y == 0 (within eps tolerance)
+      weakly_positive  : 0 < y < 0.8
+      positive         : y >= 0.8
+
+    This avoids 'other' for continuous values like 0.1, 0.3, 0.7, etc.
     """
     df = df.copy()
-    y = df["y_true"].round(1)
+    y = pd.to_numeric(df["y_true"], errors="coerce")
 
-    mapping = {
-        -1.0: "negative",
-        -0.8: "negative",
-        -0.6: "weakly_negative",
-        -0.4: "weakly_negative",
-        -0.2: "weakly_negative",
-         0.0: "neutral",
-         0.2: "weakly_positive",
-         0.4: "weakly_positive",
-         0.6: "weakly_positive",
-         0.8: "positive",
-         1.0: "positive",
-    }
+    eps = 1e-8
+    cls = np.full(len(df), "other", dtype=object)
 
-    df["sentiment_class"] = y.map(mapping)
-    unknown = df["sentiment_class"].isna()
-    if unknown.any():
-        df.loc[unknown, "sentiment_class"] = "other"
+    cls[y <= -0.8] = "negative"
+    cls[(y > -0.8) & (y < -eps)] = "weakly_negative"
+    cls[np.isclose(y, 0.0, atol=1e-6)] = "neutral"
+    cls[(y > eps) & (y < 0.8)] = "weakly_positive"
+    cls[y >= 0.8] = "positive"
+
+    df["sentiment_class"] = cls
     return df
 
 
@@ -110,12 +110,10 @@ def bin_metrics(df: pd.DataFrame, pred_col: str, threshold: float = 0.0) -> pd.D
         yhat = g[pred_col].to_numpy()
         mae = float(np.mean(np.abs(yhat - y)))
 
-        # binary metrics (threshold at 0 by default)
         yb = (y >= threshold).astype(int)
         ph = (yhat >= threshold).astype(int)
         acc = float(np.mean(yb == ph))
 
-        # F1
         tp = int(np.sum((ph == 1) & (yb == 1)))
         fp = int(np.sum((ph == 1) & (yb == 0)))
         fn = int(np.sum((ph == 0) & (yb == 1)))
@@ -207,13 +205,8 @@ def compute_prosody_features(
 
 
 def add_prosody_per_row(df: pd.DataFrame, raw_dir: str, sr: int = 16000) -> pd.DataFrame:
-    """
-    Adds per-clip prosody features to df (one row per id).
-    If file missing/decoding fails, keeps NaNs for those features.
-    """
     df = df.copy()
 
-    # build paths
     vids, clips, paths, exists = [], [], [], []
     for x in df["id"].astype(str).tolist():
         vid, clip = parse_id(x)
@@ -234,7 +227,7 @@ def add_prosody_per_row(df: pd.DataFrame, raw_dir: str, sr: int = 16000) -> pd.D
     for i, r in df.iterrows():
         base = r.to_dict()
         if not r["video_exists"]:
-            rows.append(base)  # no prosody
+            rows.append(base)
             continue
 
         y = load_audio_from_mp4(r["video_path"], sr=sr)
@@ -252,10 +245,6 @@ def add_prosody_per_row(df: pd.DataFrame, raw_dir: str, sr: int = 16000) -> pd.D
 
 
 def prosody_by_bin(df_with_prosody: pd.DataFrame) -> pd.DataFrame:
-    """
-    Aggregates prosody features by sentiment_class.
-    Returns columns: bin, prosody_<feat>_mean, prosody_<feat>_std
-    """
     prosody_cols = [
         "duration_s", "rms_mean", "rms_std", "rms_range_p95_p05",
         "pause_ratio", "voiced_ratio",
@@ -276,6 +265,180 @@ def prosody_by_bin(df_with_prosody: pd.DataFrame) -> pd.DataFrame:
 
 
 # --------------------------
+# Visual features (MediaPipe)
+# --------------------------
+def make_facelandmarker(model_path: str, num_faces: int = 1):
+    BaseOptions = mp.tasks.BaseOptions
+    FaceLandmarker = mp.tasks.vision.FaceLandmarker
+    FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
+    RunningMode = mp.tasks.vision.RunningMode
+
+    opts = FaceLandmarkerOptions(
+        base_options=BaseOptions(model_asset_path=model_path),
+        running_mode=RunningMode.VIDEO,
+        num_faces=num_faces,
+        output_face_blendshapes=True,
+        output_facial_transformation_matrixes=False,
+        min_face_detection_confidence=0.5,
+        min_face_presence_confidence=0.5,
+        min_tracking_confidence=0.5,
+    )
+    return FaceLandmarker.create_from_options(opts)
+
+
+def compute_visual_features_mediapipe(
+    video_path: str,
+    landmarker,
+    target_fps: float = 5.0,
+    max_frames: int = 300,
+) -> dict:
+    """
+    Returns aggregated per-clip facial blendshape features:
+      - face_success_rate
+      - face_n_frames, face_n_success
+      - bs_<name>_mean, bs_<name>_std, bs_<name>_max for each blendshape
+    """
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        return {"face_success_rate": float("nan"), "face_n_frames": 0, "face_n_success": 0}
+
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if not fps or fps <= 0:
+        fps = 25.0
+
+    stride = max(1, int(round(fps / target_fps))) if target_fps > 0 else 1
+
+    frame_idx = 0
+    used = 0
+    success = 0
+    bs_scores = defaultdict(list)
+
+    while used < max_frames:
+        ok, frame_bgr = cap.read()
+        if not ok:
+            break
+
+        if frame_idx % stride != 0:
+            frame_idx += 1
+            continue
+
+        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+        ts_ms = int(frame_idx * 1000.0 / fps)
+
+        try:
+            res = landmarker.detect_for_video(mp_image, ts_ms)
+        except Exception as e:
+            used += 1
+            frame_idx += 1
+            print(f"[mediapipe error] {video_path} frame={frame_idx} ts={ts_ms}ms error={e}", flush=True)
+            continue
+
+        used += 1
+
+        if res.face_blendshapes and len(res.face_blendshapes) > 0:
+            success += 1
+            for cat in res.face_blendshapes[0]:
+                bs_scores[cat.category_name].append(float(cat.score))
+
+        frame_idx += 1
+
+    cap.release()
+
+    out = {
+        "face_n_frames": int(used),
+        "face_n_success": int(success),
+        "face_success_rate": float(success / used) if used > 0 else float("nan"),
+    }
+
+    for name, vals in bs_scores.items():
+        v = np.asarray(vals, dtype=np.float32)
+        out[f"bs_{name}_mean"] = float(np.mean(v))
+        out[f"bs_{name}_std"]  = float(np.std(v))
+        out[f"bs_{name}_max"]  = float(np.max(v))
+
+    return out
+
+
+def add_visual_per_row(
+    df: pd.DataFrame,
+    raw_dir: str,
+    face_model: str,
+    target_fps: float = 5.0,
+    max_frames: int = 300,
+) -> pd.DataFrame:
+    """
+    Adds per-clip MediaPipe blendshape features to df.
+    Mirrors add_prosody_per_row: one row per id, NaNs for missing/failed clips.
+    Recreates the landmarker per clip (consistent with cluster script pattern).
+    """
+    df = df.copy()
+
+    # Build paths if not already present (reuse video_path col if available)
+    if "video_path" not in df.columns:
+        vids, clips, paths, exists = [], [], [], []
+        for x in df["id"].astype(str).tolist():
+            vid, clip = parse_id(x)
+            vids.append(vid)
+            clips.append(clip)
+            p = video_path_from_id(raw_dir, vid, clip) if vid and clip else None
+            paths.append(p)
+            exists.append(bool(p) and os.path.exists(p))
+        df["video_id"] = vids
+        df["clip_id"] = clips
+        df["video_path"] = paths
+        df["video_exists"] = exists
+
+    rows = []
+    for i, r in df.iterrows():
+        base = r.to_dict()
+        if not r.get("video_exists", False):
+            rows.append(base)
+            continue
+
+        try:
+            with make_facelandmarker(face_model, num_faces=1) as landmarker:
+                v_feats = compute_visual_features_mediapipe(
+                    r["video_path"],
+                    landmarker,
+                    target_fps=target_fps,
+                    max_frames=max_frames,
+                )
+        except Exception as e:
+            print(f"[visual] failed for {r['video_path']}: {e}", flush=True)
+            v_feats = {}
+
+        rows.append({**base, **v_feats})
+
+        if (i + 1) % 50 == 0:
+            print(f"[visual] processed {i+1}/{len(df)}", flush=True)
+
+    return pd.DataFrame(rows)
+
+
+def visual_by_bin(df_with_visual: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aggregates blendshape features by sentiment_class.
+    Returns columns: bin, visual_bs_<name>_<mean|std|max>_<agg>
+    where agg is mean/std across clips in each bin.
+    """
+    # Collect all blendshape base columns (mean/std/max variants per blendshape)
+    bs_cols = [c for c in df_with_visual.columns if c.startswith("bs_")]
+
+    rows = []
+    for b, g in df_with_visual.groupby("sentiment_class", dropna=False):
+        rec = {"bin": str(b)}
+        for c in bs_cols:
+            x = pd.to_numeric(g[c], errors="coerce").to_numpy(dtype=float)
+            rec[f"visual_{c}_mean"] = float(np.nanmean(x))
+            rec[f"visual_{c}_std"]  = float(np.nanstd(x))
+            rec[f"visual_{c}_max"]  = float(np.nanmax(x)) if not np.all(np.isnan(x)) else float("nan")
+        rows.append(rec)
+
+    return pd.DataFrame(rows).sort_values("bin").reset_index(drop=True)
+
+
+# --------------------------
 # Main
 # --------------------------
 def main(
@@ -283,8 +446,11 @@ def main(
     vision_json: str,
     out_prefix: str,
     raw_dir: str,
+    face_model: str,
     top_k: int = 200,
     sr: int = 16000,
+    face_fps: float = 5.0,
+    face_max_frames: int = 300,
 ):
     # Load both
     a = load_preds(audio_json).rename(columns={"yhat": "yhat_audio"})
@@ -297,7 +463,7 @@ def main(
     df = add_bins(df)
     df["abs_err_audio"] = (df["yhat_audio"] - df["y_true"]).abs()
     df["abs_err_vision"] = (df["yhat_vision"] - df["y_true"]).abs()
-    df["delta_audio_better"] = df["abs_err_vision"] - df["abs_err_audio"]  # >0 means audio better
+    df["delta_audio_better"] = df["abs_err_vision"] - df["abs_err_audio"]
 
     # --------------------------
     # (2) Intensity bin analysis
@@ -315,29 +481,38 @@ def main(
         how="outer"
     )
 
-    # --------------------------
-    # NEW: Prosody by bin (from RAW clips)
-    # --------------------------
-    print("[step] extracting prosody for all aligned clips (for bin-level aggregation)...")
+    # Deduplicated id/sentiment_class lookup for feature extraction
+    id_bin_df = df[["id", "sentiment_class"]].drop_duplicates(subset="id").reset_index(drop=True)
 
-    df_pros = add_prosody_per_row(df[["id", "sentiment_class"]].drop_duplicates().merge(
-        df[["id"]], on="id", how="inner"
-    ).merge(df[["id", "sentiment_class"]], on="id", how="left"), raw_dir=raw_dir, sr=sr)
-    print('df_pros columns:', df_pros.columns)
-
-    # Ensure bin column name matches comb merge key
-    df_pros = df_pros.merge(df[["id", "sentiment_class"]].drop_duplicates(), on="id", how="left")
-    print('df_pros columns:', df_pros.columns)
+    # --------------------------
+    # Prosody by bin
+    # --------------------------
+    print("[step] extracting prosody features per clip...")
+    df_pros = add_prosody_per_row(id_bin_df, raw_dir=raw_dir, sr=sr)
     pros_bin = prosody_by_bin(df_pros)
-    print('pros_bin columns:', pros_bin.columns) 
-   
-    # Merge prosody stats into the side-by-side metrics
     comb = comb.merge(pros_bin, on="bin", how="left")
-    print('comb columns:', comb.columns)  
+    print(f"[prosody] done — {len(df_pros)} clips processed")
+
+    # --------------------------
+    # Visual (MediaPipe) by bin
+    # --------------------------
+    print("[step] extracting MediaPipe visual features per clip...")
+    # Reuse video_path column already built in prosody step if present
+    df_vis = add_visual_per_row(
+        df_pros[["id", "sentiment_class", "video_path", "video_exists"]],
+        raw_dir=raw_dir,
+        face_model=face_model,
+        target_fps=face_fps,
+        max_frames=face_max_frames,
+    )
+    vis_bin = visual_by_bin(df_vis)
+    comb = comb.merge(vis_bin, on="bin", how="left")
+    print(f"[visual] done — {len(df_vis)} clips processed")
+
     comb.to_csv(f"{out_prefix}_bin_metrics_side_by_side.csv", index=False, encoding="utf-8-sig")
 
     # --------------------------
-    # (3) “Audio wins” examples
+    # (3) "Audio wins" / "Vision wins" examples
     # --------------------------
     audio_wins = df.sort_values("delta_audio_better", ascending=False).head(top_k)
     vision_wins = df.sort_values("delta_audio_better", ascending=True).head(top_k)
@@ -352,7 +527,7 @@ def main(
     vision_wins[keep_cols].to_csv(f"{out_prefix}_top_vision_wins.csv", index=False, encoding="utf-8-sig")
 
     # --------------------------
-    # (5) Audio win rate by bin (+ avg abs error gap)
+    # (5) Audio win rate by bin
     # --------------------------
     df["audio_beats_vision"] = (df["delta_audio_better"] > 0).astype(int)
     df["abs_err_gap"] = (df["abs_err_vision"] - df["abs_err_audio"]).abs()
@@ -368,13 +543,12 @@ def main(
           .reset_index()
     )
     win_rate.to_csv(f"{out_prefix}_audio_win_rate_by_bin.csv", index=False, encoding="utf-8-sig")
-
     df.to_csv(f"{out_prefix}_aligned_audio_vs_vision.csv", index=False, encoding="utf-8-sig")
 
     print("[done] wrote:")
     print(f"  {out_prefix}_bin_metrics_audio.csv")
     print(f"  {out_prefix}_bin_metrics_vision.csv")
-    print(f"  {out_prefix}_bin_metrics_side_by_side.csv  (NOW includes prosody_* columns)")
+    print(f"  {out_prefix}_bin_metrics_side_by_side.csv  (includes prosody_* and visual_bs_* columns)")
     print(f"  {out_prefix}_audio_win_rate_by_bin.csv")
     print(f"  {out_prefix}_top_audio_wins.csv")
     print(f"  {out_prefix}_top_vision_wins.csv")
@@ -383,12 +557,22 @@ def main(
 
 if __name__ == "__main__":
     # -------- EDIT THESE PATHS --------
-    AUDIO_JSON = "/hpctmp/scratch/e0968015/chsims/FusionRuns/audio_guided_attn_run3/preds_test.json"
-    VISION_JSON = "/hpctmp/scratch/e0968015/chsims/FusionRuns/vision_guided_attn_run3/preds_test.json"
-    OUT_PREFIX = "/hpctmp/scratch/e0968015/chsims/FusionRuns/posthoc_audio_vs_vision_run3/chsims_A35"
+    AUDIO_JSON = "/hpctmp/scratch/e0968015/mosei/FusionRuns/audio_guided_attn_run3/preds_test.json"
+    VISION_JSON = "/hpctmp/scratch/e0968015/mosei/FusionRuns/vision_guided_attn_run3/preds_test.json"
+    OUT_PREFIX = "/hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis_mosei_a35_run1/mosei_A35"
 
-    # CHSIMS raw clips root:
-    RAW_DIR = "/scratch/e0968015/chsims/Raw"
+    # MOSEI raw clips root:
+    RAW_DIR = "/scratch/e0968015/mosei/Raw"
+
+    FACE_MODEL  = "/hpctmp/scratch/e0968015/models/face_landmarker.task"
 
     os.makedirs(os.path.dirname(OUT_PREFIX), exist_ok=True)
-    main(AUDIO_JSON, VISION_JSON, OUT_PREFIX, raw_dir=RAW_DIR, top_k=300, sr=16000)
+    main(
+        AUDIO_JSON, VISION_JSON, OUT_PREFIX,
+        raw_dir=RAW_DIR,
+        face_model=FACE_MODEL,
+        top_k=300,
+        sr=16000,
+        face_fps=5.0,
+        face_max_frames=300,
+    )

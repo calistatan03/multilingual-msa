@@ -112,7 +112,7 @@ class KernelFusionSystem(nn.Module):
             nn.Linear(hidden_dim // 2, 1),
         )
 
-    def forward(
+    def forward_features(
         self,
         text_features: torch.Tensor,
         audio_features: torch.Tensor,
@@ -139,9 +139,21 @@ class KernelFusionSystem(nn.Module):
         # 3) Fuse (weighted concat) -> (B, 3*rff_dim)
         wt, wa, wv = self.w_sqrt[0], self.w_sqrt[1], self.w_sqrt[2]
         fused = torch.cat([wt * kt, wa * ka, wv * kv], dim=1)
+        return fused 
 
+
+    def forward(
+        self,
+	text_features: torch.Tensor,
+        audio_features: torch.Tensor,
+        vision_features: torch.Tensor,
+        audio_length: torch.Tensor,
+        vision_length: torch.Tensor
+    ):
+        fused = self.forward_features(text_features, audio_features, vision_features, audio_length, vision_length) 
         # 4) SAME head path -> (B,)
         head_in = self.proj_to_head(fused)   # (B, 3*d_model)
         yhat = self.fusion_layers(head_in)   # (B, 1)
+
         return yhat.squeeze(-1)
 

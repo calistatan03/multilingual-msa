@@ -27,7 +27,14 @@ from encoders.text import TextEncoder
 from encoders.audio import AudioEncoder
 from encoders.vision import VisionEncoder
 import torch.nn as nn
-
+from hybrid_kernel_biattn import HybridKernelBiAttnFusionSystem
+# from baseline import MandarinHybridFusionV2
+from baseline_new import MandarinHybridFusionV3
+# from hybrid_kernel_biattn_3 import MandarinHybridFusionV2
+# from text_gru import MandarinHybridFusionV2
+# from adaptivegate_simple import MandarinHybridFusionV2
+# from multihead_audio import MandarinHybridFusionV2
+# from three_gate import MandarinHybridFusionV2
 
 class EarlyFusionSystem(nn.Module):
     """
@@ -152,7 +159,7 @@ def main():
     ap.add_argument("--audio_kernel", type=int, default=3)
     ap.add_argument("--vision_kernel", type=int, default=3)
     ap.add_argument("--no_vision_bottleneck", action="store_true")
-    ap.add_argument("--fusion", default="coattn", choices=["early_fusion", "attn", "coattn", "text_guided_attn", "trimodal_attn", "tensor_fusion", "graph_fusion", "kernel_fusion", "bibimodal_fusion", "lowrank_fusion", "audio_guided_attn", "vision_guided_attn"])
+    ap.add_argument("--fusion", default="coattn", choices=["early_fusion", "attn", "coattn", "text_guided_attn", "trimodal_attn", "tensor_fusion", "graph_fusion", "kernel_fusion", "bibimodal_fusion", "lowrank_fusion", "audio_guided_attn", "vision_guided_attn", "hybrid_kernel_biattn"])
     ap.add_argument("--log_alphas", action="store_true")
 
 
@@ -285,8 +292,13 @@ def main():
         d_model=args.d_model, 
         hidden_dim=args.hidden_dim
     )
-    else: 
+    elif args.fusion == "vision_guided_attn": 
         model = VisionGuidedAttnSystem( 
+        d_model=args.d_model, 
+        hidden_dim=args.hidden_dim
+    )
+    else: 
+        model = MandarinHybridFusionV3( 
         d_model=args.d_model, 
         hidden_dim=args.hidden_dim
     )

@@ -12,7 +12,7 @@ PROJECT_DIR="/home/svu/e0968015/experiments"   # folder containing main.py, trai
 DATASET_DIR="/hpctmp/scratch/e0968015/chsims"
 FEATURES_PKL="${DATASET_DIR}/Processed/features.pkl"
 
-OUT_DIR="${DATASET_DIR}/FusionRuns/audio_guided_attn_run3"
+OUT_DIR="${DATASET_DIR}/FusionRuns/hybrid_kernel_biattn_run1"
 mkdir -p "${OUT_DIR}"
 
 mkdir -p "${PROJECT_DIR}/logs"
@@ -60,8 +60,8 @@ export MKL_NUM_THREADS=12
 python main.py \
   --features_pkl "${FEATURES_PKL}" \
   --out_dir "${OUT_DIR}" \
-  --exp_name "audio_guided_attn" \
-  --fusion audio_guided_attn \
+  --exp_name "hybrid_kernel_biattn" \
+  --fusion hybrid_kernel_biattn \
   --epochs 30 \
   --batch_size 64 \
   --lr 1e-3 \

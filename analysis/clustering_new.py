@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Cluster utterances by model error patterns from saved preds_test.json files.
+ABS-ONLY: Cluster utterances by *absolute error patterns* across models from saved preds_test.json files.
 
 Expected JSON format in each experiment folder (e.g. .../kernel_fusion_run3/preds_test.json):
 {
@@ -13,39 +13,31 @@ Expected JSON format in each experiment folder (e.g. .../kernel_fusion_run3/pred
   "yhat": [...]
 }
 
-This script:
-1) Scans experiment folders (e.g. kernel_fusion_run3, text_guided_attn_run3, ...)
-2) Loads predictions across methods
-3) Aligns utterances by id
-4) Builds error matrix per utterance across methods
-5) Runs KMeans clustering (signed and/or absolute errors)
-6) Saves cluster summaries / CSVs
-7) Plots PCA and t-SNE scatterplots of clusters
+Pipeline:
+1) Scan experiment folders for preds_test.json under *_{run_suffix}
+2) Load predictions across methods
+3) Align utterances by id
+4) Build ABS error matrix per utterance across methods
+5) (NEW) Elbow plot: inertia vs K to justify number of clusters
+6) Run KMeans on standardized error matrix
+7) Save cluster outputs + plots
 
-Works even if you currently only have one dataset group (e.g. MOSEI A35).
-
-Usage examples:
-    python cluster_utterance_errors.py \
-      --root /hpctmp/scratch/e0968015 \
-      --dataset mosei \
-      --audio-dim 35 \
-      --out-dir /hpctmp/scratch/e0968015/analysis_clusters \
-      --run-suffix run3
-
-    python cluster_utterance_errors.py \
-      --root /hpctmp/scratch/e0968015/mosei/FusionRuns \
-      --out-dir /hpctmp/scratch/e0968015/mosei/FusionRuns/cluster_analysis \
-      --run-suffix run3 \
-      --mode both
+Usage:
+  python cluster_abs_errors.py \
+    --root /hpctmp/scratch/e0968015/chsims/FusionRuns \
+    --out-dir /hpctmp/scratch/e0968015/chsims/FusionRuns/cluster_analysis_abs \
+    --run-suffix run3 \
+    --dataset chsims \
+    --audio-dim 35 \
+    --n-clusters 4
 """
 
 import os
 import re
 import json
-import math
 import argparse
 from pathlib import Path
-from collections import defaultdict, Counter
+from collections import Counter
 
 import numpy as np
 import pandas as pd
@@ -66,7 +58,6 @@ from sklearn.preprocessing import StandardScaler
 # Config: canonical method names
 # -----------------------------
 METHOD_ALIASES = {
-    # folder prefix -> pretty label
     "early_fusion": "Early Fusion",
     "trimodal_attention": "Tri-Modal Attention",
     "tri_modal_attention": "Tri-Modal Attention",
@@ -98,25 +89,21 @@ def infer_dataset_from_path(path_str: str) -> str:
     p = path_str.lower()
     if "/mosei/" in p or p.endswith("/mosei") or "mosei" in p:
         return "mosei"
-    if "/chsims/" in p or "chsims" in p or "chsims" in p:
+    if "/chsims/" in p or "chsims" in p:
         return "chsims"
     return "unknown"
 
 
 def infer_audio_dim_from_path_or_json(path_str: str, data: dict) -> str:
     """
-    Best-effort inference. If not obvious, returns 'unknown'.
+    Best-effort inference. If not obvious, returns 'unknown' (not forced to 35).
     """
     p = path_str.lower()
 
-    # Common naming patterns you used:
-    # ... audio_guided_attn_35_fusion_run1 ...
-    # ... vision_guided_attn_16_fusion_run1 ...
     m = re.search(r'[_\-](16|35)[_\-]', p)
     if m:
         return m.group(1)
 
-    # If path contains explicit audio dim token like a35 / audio35
     m = re.search(r'\ba(16|35)\b', p)
     if m:
         return m.group(1)
@@ -124,27 +111,18 @@ def infer_audio_dim_from_path_or_json(path_str: str, data: dict) -> str:
     if m:
         return m.group(1)
 
-    # Could also infer from exp_name if present
     exp_name = str(data.get("exp_name", "")).lower()
     m = re.search(r'[_\-](16|35)[_\-]', exp_name)
     if m:
         return m.group(1)
 
-    return "35"
+    return "unknown"
 
 
 def normalise_method_name(folder_name: str) -> str:
-    """
-    Example:
-      kernel_fusion_run3 -> Kernel Fusion
-      text_guided_attn_fusion_run1 -> Text-Guided Attention (best effort)
-    """
     name = folder_name.lower()
-
-    # strip trailing _runX
     name = re.sub(r"_run\d+$", "", name)
 
-    # best alias match by longest prefix/key contained
     candidates = []
     for k, v in METHOD_ALIASES.items():
         if name == k or name.startswith(k) or k in name:
@@ -152,7 +130,6 @@ def normalise_method_name(folder_name: str) -> str:
     if candidates:
         return sorted(candidates, key=lambda x: x[0], reverse=True)[0][1]
 
-    # fallback prettify
     name = name.replace("_", " ").replace("-", " ")
     return " ".join(w.capitalize() for w in name.split())
 
@@ -169,21 +146,18 @@ def find_prediction_jsons(root: str, run_suffix: str = "run3", dataset_filter=No
     for p in root_path.rglob("preds_test.json"):
         parent = p.parent.name.lower()
 
-        # require folder name to contain _runX suffix if requested
         if run_suffix:
             if not parent.endswith(f"_{run_suffix.lower()}"):
                 continue
 
-        # lightweight dataset filter using path
         if dataset_filter:
             ds_guess = infer_dataset_from_path(str(p))
             if ds_guess != dataset_filter.lower():
                 continue
 
-        # audio dim filter (best-effort) by folder path string if explicit
+        # only filter on explicit dim tokens if present in path
         if audio_dim_filter is not None:
             path_l = str(p).lower()
-            # if explicit 16/35 token present and mismatched -> skip
             explicit_dim = None
             m = re.search(r'[_\-](16|35)[_\-]', path_l)
             if m:
@@ -203,11 +177,10 @@ def find_prediction_jsons(root: str, run_suffix: str = "run3", dataset_filter=No
 # ---------------------------------
 # Loading / alignment
 # ---------------------------------
-def load_preds_json(fp: str):
+def load_preds_json(fp: str) -> pd.DataFrame:
     with open(fp, "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # FIX: yhat is required for error_abs / error_signed
     required = ["ids", "raw_texts", "y_true", "yhat"]
     for k in required:
         if k not in data:
@@ -234,15 +207,12 @@ def load_preds_json(fp: str):
     for i in range(n):
         yt = float(y_true[i])
         yh = float(yhat[i])
-
         rows.append(
             {
                 "id": str(ids[i]),
                 "raw_text": "" if raws[i] is None else str(raws[i]),
                 "y_true": yt,
                 "yhat": yh,
-                # FIX: compute error columns used by clustering
-                "error_signed": yh - yt,
                 "error_abs": abs(yh - yt),
                 "method": method,
                 "source_file": fp,
@@ -252,7 +222,13 @@ def load_preds_json(fp: str):
             }
         )
 
-    return pd.DataFrame(rows)
+    df = pd.DataFrame(rows)
+
+    # safety: drop NaNs / inf
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna(subset=["y_true", "yhat", "error_abs"]).reset_index(drop=True)
+    return df
+
 
 def combine_all_predictions(pred_files):
     if not pred_files:
@@ -272,7 +248,6 @@ def combine_all_predictions(pred_files):
 
     all_df = pd.concat(dfs, ignore_index=True)
 
-    # show quick inventory
     print("\n[summary] Loaded methods by dataset/audio_dim:")
     inv = (
         all_df[["dataset", "audio_dim", "method", "source_file"]]
@@ -290,22 +265,17 @@ def combine_all_predictions(pred_files):
 # ---------------------------------
 # Feature construction for clustering
 # ---------------------------------
-def build_utterance_matrix(group_df: pd.DataFrame, mode: str = "abs", require_all_methods: bool = True):
+def build_utterance_matrix_abs(group_df: pd.DataFrame, require_all_methods: bool = True):
     """
     Returns:
       wide_df: one row per utterance with columns:
          id, raw_text, y_true, <method error cols>, yhat__<method>...
-      X: np.ndarray (N, num_methods)  <-- error matrix used for clustering
+      X: np.ndarray (N, num_methods)  <-- ABS error matrix used for clustering
       methods: list[str]             <-- method names (error columns)
     """
-    if mode not in {"abs", "signed"}:
-        raise ValueError("mode must be 'abs' or 'signed'")
+    if "error_abs" not in group_df.columns:
+        raise ValueError("Missing error_abs in group_df. Did you compute it in load_preds_json()?")
 
-    val_col = "error_abs" if mode == "abs" else "error_signed"
-    if val_col not in group_df.columns:
-        raise ValueError(f"Missing {val_col} in group_df. Did you compute errors in load_preds_json?")
-
-    # meta: one row per id
     meta = (
         group_df.sort_values(["id", "method"])
         .groupby("id", as_index=False)
@@ -317,23 +287,19 @@ def build_utterance_matrix(group_df: pd.DataFrame, mode: str = "abs", require_al
         )
     )
 
-    # Error pivot (used for clustering)
-    pivot_err = group_df.pivot_table(index="id", columns="method", values=val_col, aggfunc="first")
+    pivot_err = group_df.pivot_table(index="id", columns="method", values="error_abs", aggfunc="first")
     methods = list(pivot_err.columns)
 
-    # yhat pivot (for reporting)
     pivot_yhat = group_df.pivot_table(index="id", columns="method", values="yhat", aggfunc="first")
     pivot_yhat.columns = [f"yhat__{c}" for c in pivot_yhat.columns]
 
-    # alignment policy (based on error pivot)
     if require_all_methods:
         before = len(pivot_err)
         pivot_err = pivot_err.dropna(axis=0, how="any")
         after = len(pivot_err)
         dropped = before - after
         if dropped > 0:
-            print(f"[align] Dropped {dropped} utterances with missing method predictions (mode={mode})")
-
+            print(f"[align] Dropped {dropped} utterances with missing method predictions (abs errors).")
         pivot_yhat = pivot_yhat.loc[pivot_err.index]
     else:
         pivot_err = pivot_err.copy()
@@ -344,62 +310,96 @@ def build_utterance_matrix(group_df: pd.DataFrame, mode: str = "abs", require_al
     wide = meta.merge(pivot_err.reset_index(), on="id", how="inner")
     wide = wide.merge(pivot_yhat.reset_index(), on="id", how="left")
 
-    # error columns for X
-    methods = [c for c in wide.columns if c not in {"id", "raw_text", "y_true", "dataset", "audio_dim"} and not c.startswith("yhat__")]
+    err_cols = [c for c in wide.columns if c not in {"id", "raw_text", "y_true", "dataset", "audio_dim"} and not c.startswith("yhat__")]
+    X = wide[err_cols].to_numpy(dtype=np.float32)
 
-    X = wide[methods].to_numpy(dtype=np.float32)
-    return wide, X, methods
+    # safety: ensure finite
+    if not np.isfinite(X).all():
+        raise ValueError("X contains NaN/Inf after alignment. Check input preds_test.json files.")
 
-def add_derived_columns(wide_df: pd.DataFrame, methods: list[str]):
-    out = wide_df.copy()
-    err_mat = out[methods].to_numpy(dtype=np.float32)
-
-    # These columns are only meaningful if using abs errors.
-    # But we'll compute generic ones from whatever matrix is passed.
-    out["feature_mean"] = np.mean(err_mat, axis=1)
-    out["feature_std"] = np.std(err_mat, axis=1)
-    out["feature_min"] = np.min(err_mat, axis=1)
-    out["feature_max"] = np.max(err_mat, axis=1)
-    out["feature_range"] = out["feature_max"] - out["feature_min"]
-
-    # "hardness" and disagreement heuristics
-    out["hardness_score"] = out["feature_mean"]
-    out["model_disagreement"] = out["feature_std"]
-
-    # best / worst model on that utterance (based on current feature values)
-    best_idx = np.argmin(err_mat, axis=1)
-    worst_idx = np.argmax(err_mat, axis=1)
-    out["best_method_on_utterance"] = [methods[i] for i in best_idx]
-    out["worst_method_on_utterance"] = [methods[i] for i in worst_idx]
-
-    return out
+    return wide, X, err_cols
 
 
 # ---------------------------------
-# Clustering + summaries
+# KMeans + elbow
 # ---------------------------------
-def run_kmeans(X: np.ndarray, n_clusters: int, seed: int = 42, standardize: bool = True):
-    X_used = X.copy()
-    scaler = None
-    if standardize:
-        scaler = StandardScaler()
-        X_used = scaler.fit_transform(X_used)
+def standardize_X(X: np.ndarray):
+    scaler = StandardScaler()
+    Xs = scaler.fit_transform(X)
+    return Xs, scaler
 
+
+def run_kmeans(X: np.ndarray, n_clusters: int, seed: int = 42):
     kmeans = KMeans(n_clusters=n_clusters, random_state=seed, n_init=20)
-    labels = kmeans.fit_predict(X_used)
-    return labels, kmeans, scaler, X_used
+    labels = kmeans.fit_predict(X)
+    return labels, kmeans
 
-def cluster_summary_table(df_with_clusters: pd.DataFrame, methods: list[str]):
+
+def elbow_curve(
+    Xs: np.ndarray,
+    out_dir: str,
+    dataset: str,
+    prefix: str,
+    k_min: int = 2,
+    k_max: int = 12,
+    seed: int = 42,
+):
+    """
+    Saves:
+      - <prefix>_elbow.csv: columns [k, inertia]
+      - <prefix>_elbow.png: inertia vs k
+    """
+    os.makedirs(out_dir, exist_ok=True)
+
+    n = Xs.shape[0]
+    if n < 3:
+        print("[elbow] Too few samples to compute elbow curve.")
+        return None
+
+    k_max_eff = min(k_max, n - 1)
+    if k_max_eff < k_min:
+        print("[elbow] Too few samples for requested k range.")
+        return None
+
+    ks, inertias = [], []
+    for k in range(k_min, k_max_eff + 1):
+        km = KMeans(n_clusters=k, random_state=seed, n_init=20)
+        km.fit(Xs)
+        ks.append(k)
+        inertias.append(float(km.inertia_))
+
+    df = pd.DataFrame({"k": ks, "inertia": inertias})
+    df.to_csv(os.path.join(out_dir, f"{prefix}_elbow.csv"), index=False)
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(ks, inertias, marker="o")
+    plt.xticks(ks)
+    plt.xlabel("Number of clusters (k)")
+    plt.ylabel("Inertia (within-cluster SSE)")
+    plot_title = "Elbow curve (MOSEI)" if dataset == "mosei" else "Elbow curve (CHSIMS)"
+    plt.title(plot_title)
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, f"{prefix}_elbow.png"), dpi=180)
+    plt.close()
+
+    print(f"[elbow] Saved {prefix}_elbow.csv and {prefix}_elbow.png")
+    return df
+
+
+# ---------------------------------
+# Summaries + outputs
+# ---------------------------------
+def cluster_summary_table(df_clustered: pd.DataFrame, err_cols: list[str]):
     rows = []
-    for c in sorted(df_with_clusters["cluster"].unique()):
-        sub = df_with_clusters[df_with_clusters["cluster"] == c].copy()
+    for c in sorted(df_clustered["cluster"].unique()):
+        sub = df_clustered[df_clustered["cluster"] == c].copy()
 
-        # determine best/worst method per utterance by min/max error across methods
-        err_mat = sub[methods].to_numpy(dtype=np.float32)
+        err_mat = sub[err_cols].to_numpy(dtype=np.float32)
         best_idx = np.argmin(err_mat, axis=1)
         worst_idx = np.argmax(err_mat, axis=1)
-        best_methods = [methods[i] for i in best_idx]
-        worst_methods = [methods[i] for i in worst_idx]
+
+        best_methods = [err_cols[i] for i in best_idx]
+        worst_methods = [err_cols[i] for i in worst_idx]
 
         best_counts = Counter(best_methods)
         worst_counts = Counter(worst_methods)
@@ -407,7 +407,7 @@ def cluster_summary_table(df_with_clusters: pd.DataFrame, methods: list[str]):
         rows.append({
             "cluster": int(c),
             "size": int(len(sub)),
-            "pct": float(len(sub) / len(df_with_clusters)),
+            "pct": float(len(sub) / len(df_clustered)),
             "y_true_mean": float(sub["y_true"].mean()),
             "y_true_std": float(sub["y_true"].std(ddof=0)),
             "most_common_best_method": best_counts.most_common(1)[0][0] if best_counts else None,
@@ -418,112 +418,95 @@ def cluster_summary_table(df_with_clusters: pd.DataFrame, methods: list[str]):
 
     return pd.DataFrame(rows).sort_values("cluster").reset_index(drop=True)
 
+
 def save_cluster_artifacts(
-    df_clustered: pd.DataFrame,
-    methods: list[str],
+    df_wide: pd.DataFrame,
+    err_cols: list[str],
     labels: np.ndarray,
     group_out_dir: str,
-    prefix: str,
+    prefix: str = "abs",
 ):
     os.makedirs(group_out_dir, exist_ok=True)
 
-    df_clustered = df_clustered.copy()
-    df_clustered["cluster"] = labels
+    df = df_wide.copy()
+    df["cluster"] = labels
 
-    # Summary table
-    summary_df = cluster_summary_table(df_clustered, methods)
-    summary_path = os.path.join(group_out_dir, f"{prefix}_cluster_summary.csv")
-    summary_df.to_csv(summary_path, index=False, encoding="utf-8-sig")
+    # Summary
+    summary_df = cluster_summary_table(df, err_cols)
+    summary_df.to_csv(os.path.join(group_out_dir, f"{prefix}_cluster_summary.csv"),
+                      index=False, encoding="utf-8-sig")
 
-    # Full clustered table (keep error cols + yhat cols)
-    yhat_cols = [c for c in df_clustered.columns if c.startswith("yhat__")]
+    # Full table
+    yhat_cols = [c for c in df.columns if c.startswith("yhat__")]
 
-    full_cols = (
-        ["id", "raw_text", "y_true", "cluster"]
-        + yhat_cols
-        + methods  # these are error columns
-    )
-    full_cols = [c for c in full_cols if c in df_clustered.columns]
-    full_path = os.path.join(group_out_dir, f"{prefix}_clustered_utterances.csv")
-    df_clustered.sort_values(["cluster", "id"]).to_csv(
-        full_path, index=False, columns=full_cols, encoding="utf-8-sig"
+    full_cols = ["id", "raw_text", "y_true", "cluster"] + yhat_cols + err_cols
+    df.sort_values(["cluster", "id"]).to_csv(
+        os.path.join(group_out_dir, f"{prefix}_clustered_utterances.csv"),
+        index=False,
+        columns=full_cols,
+        encoding="utf-8-sig"
     )
 
-    # NEW: per-cluster “clip list” CSV (all utterances in cluster)
-    for c in sorted(df_clustered["cluster"].unique()):
-        sub = df_clustered[df_clustered["cluster"] == c].copy()
-
+    # Per-cluster clip list
+    for c in sorted(df["cluster"].unique()):
+        sub = df[df["cluster"] == c].copy()
         clip_cols = ["id", "raw_text", "y_true", "cluster"] + yhat_cols
-        clip_cols = [x for x in clip_cols if x in sub.columns]
+        sub.sort_values("id").to_csv(
+            os.path.join(group_out_dir, f"{prefix}_cluster{c}_clips_with_predictions.csv"),
+            index=False,
+            columns=clip_cols,
+            encoding="utf-8-sig"
+        )
 
-        out_path = os.path.join(group_out_dir, f"{prefix}_cluster{c}_clips_with_predictions.csv")
-        sub.sort_values("id").to_csv(out_path, index=False, columns=clip_cols, encoding="utf-8-sig")
-
-    return df_clustered, summary_df
+    return df, summary_df
 
 
 # ---------------------------------
-# Plotting
+# Plotting (PCA + t-SNE)
 # ---------------------------------
 def _safe_perplexity(n_samples: int) -> int:
-    # TSNE requires perplexity < n_samples, typically > 1
     if n_samples <= 5:
         return 2
-    # choose something conservative
     return int(min(30, max(5, (n_samples - 1) // 3)))
 
 
-def plot_cluster_scatter(
-    X: np.ndarray,
-    cluster_labels: np.ndarray,
-    out_dir: str,
-    prefix: str,
-    title_suffix: str = "",
-    try_tsne: bool = True,
-):
-    """
-    Creates PCA scatter and (optionally) t-SNE scatter.
-    X should be (N, D), preferably already standardized or suitable for projection.
-    """
+def plot_cluster_scatter(Xs: np.ndarray, cluster_labels: np.ndarray, out_dir: str, prefix: str = "", title_suffix: str = "", try_tsne: bool = True):
     os.makedirs(out_dir, exist_ok=True)
-
-    n = X.shape[0]
+    n = Xs.shape[0]
     if n < 2:
         print("[plot] Skipping scatter plots (need at least 2 samples).")
         return
 
-    # PCA
+    # PCA scatter
     try:
         pca = PCA(n_components=2, random_state=42)
-        X_pca = pca.fit_transform(X)
+        X_pca = pca.fit_transform(Xs)
 
         plt.figure(figsize=(8, 6))
         sc = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, s=12, alpha=0.8)
-        plt.title(f"PCA cluster scatter ({prefix}) {title_suffix}".strip())
+        plt.title(title_suffix)
         plt.xlabel("PC1")
         plt.ylabel("PC2")
         plt.colorbar(sc, label="Cluster")
         plt.tight_layout()
-        pca_path = os.path.join(out_dir, f"{prefix}_clusters_pca.png")
-        plt.savefig(pca_path, dpi=180)
+        plt.savefig(os.path.join(out_dir, f"{prefix}_clusters_pca.png"), dpi=180)
         plt.close()
 
-        # variance plot (optional, useful)
+        # explained variance ratio
         plt.figure(figsize=(6, 4))
         evr = pca.explained_variance_ratio_
         plt.bar([1, 2], evr)
         plt.xticks([1, 2], ["PC1", "PC2"])
         plt.ylabel("Explained variance ratio")
-        plt.title(f"PCA variance ({prefix}) {title_suffix}".strip())
+        plt.title(title_suffix)
         plt.tight_layout()
-        evr_path = os.path.join(out_dir, f"{prefix}_pca_variance.png")
-        plt.savefig(evr_path, dpi=180)
+        plt.savefig(os.path.join(out_dir, f"{prefix}_pca_variance.png"), dpi=180)
         plt.close()
 
     except Exception as e:
         print(f"[plot] PCA plotting failed: {e}")
 
-    # t-SNE
+    # t-SNE scatter (visualisation only; clusters are still KMeans clusters)
     if try_tsne and n >= 10:
         try:
             perp = _safe_perplexity(n)
@@ -535,7 +518,7 @@ def plot_cluster_scatter(
                 random_state=42,
                 n_iter=1000,
             )
-            X_tsne = tsne.fit_transform(X)
+            X_tsne = tsne.fit_transform(Xs)
 
             plt.figure(figsize=(8, 6))
             sc = plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=cluster_labels, s=12, alpha=0.8)
@@ -544,8 +527,7 @@ def plot_cluster_scatter(
             plt.ylabel("t-SNE 2")
             plt.colorbar(sc, label="Cluster")
             plt.tight_layout()
-            tsne_path = os.path.join(out_dir, f"{prefix}_clusters_tsne.png")
-            plt.savefig(tsne_path, dpi=180)
+            plt.savefig(os.path.join(out_dir, f"{prefix}_clusters_tsne.png"), dpi=180)
             plt.close()
         except Exception as e:
             print(f"[plot] t-SNE plotting failed: {e}")
@@ -556,121 +538,113 @@ def plot_cluster_scatter(
 # ---------------------------------
 # Main workflow
 # ---------------------------------
-def analyse_group(
+def analyse_group_abs(
     group_df: pd.DataFrame,
     group_key: tuple,
     out_root: str,
     n_clusters: int,
-    mode: str,
     require_all_methods: bool,
     standardize_for_kmeans: bool,
+    elbow_k_max: int,
 ):
     dataset, audio_dim = group_key
-    group_out_dir = os.path.join(out_root, "")
+    group_name = f"{dataset}_A35"
+    group_out_dir = os.path.join(out_root, group_name)
     os.makedirs(group_out_dir, exist_ok=True)
 
     print(f"\n[group] {group_name} | rows={len(group_df)}")
     print(f"[group] methods: {sorted(group_df['method'].unique().tolist())}")
 
-    modes = ["abs", "signed"] if mode == "both" else [mode]
+    wide_df, X, err_cols = build_utterance_matrix_abs(group_df, require_all_methods=require_all_methods)
+    print(f"  [matrix] X shape = {X.shape} | methods={len(err_cols)}")
 
-    for cluster_mode in modes:
-        print(f"\n  [mode] {cluster_mode}")
+    if X.shape[0] < 3:
+        print("  [skip] Too few utterances for clustering.")
+        return
 
-        wide_df, X, methods = build_utterance_matrix(
-            group_df, mode=cluster_mode, require_all_methods=require_all_methods
+    # Standardize (recommended)
+    if standardize_for_kmeans:
+        Xs, _ = standardize_X(X)
+    else:
+        Xs = X
+
+    # (NEW) Elbow curve for justification
+    elbow_curve(Xs, out_dir=group_out_dir, dataset=dataset, prefix="abs", k_min=2, k_max=elbow_k_max)
+
+    # choose k safely
+    k = int(n_clusters)
+    if k < 2:
+        k = 2
+    if k >= Xs.shape[0]:
+        k = max(2, Xs.shape[0] - 1)
+
+    labels, kmeans = run_kmeans(Xs, n_clusters=k, seed=42)
+
+    # Save artifacts
+    df_clustered, summary_df = save_cluster_artifacts(
+        df_wide=wide_df,
+        err_cols=err_cols,
+        labels=labels,
+        group_out_dir=group_out_dir,
+        prefix="abs",
+    )
+
+    # Method-level stats
+    method_stats = []
+    for m in err_cols:
+        vals = df_clustered[m].to_numpy(dtype=np.float32)
+        method_stats.append(
+            {
+                "method": m,
+                "abs_error_mean": float(np.mean(vals)),
+                "abs_error_std": float(np.std(vals)),
+                "abs_error_median": float(np.median(vals)),
+            }
         )
-        print('wide_df keys:', wide_df.keys())
-        print(f"  [matrix] X shape = {X.shape} | methods={len(methods)}")
-        if X.shape[0] == 0:
-            print("  [skip] No aligned utterances for this group/mode.")
-            continue
+    pd.DataFrame(method_stats).sort_values("abs_error_mean").to_csv(
+        os.path.join(group_out_dir, "abs_method_error_stats.csv"),
+        index=False,
+    )
 
-        # choose n_clusters safely
-        k = min(n_clusters, max(2, X.shape[0] // 10)) if X.shape[0] < n_clusters else n_clusters
-        if X.shape[0] < 3:
-            print("  [skip] Too few utterances for clustering.")
-            continue
-        if k < 2:
-            k = 2
-        if k >= X.shape[0]:
-            k = max(2, X.shape[0] - 1)
+    # Centroids in standardized space + (optionally) original space
+    centroid_df = pd.DataFrame(kmeans.cluster_centers_, columns=err_cols)
+    centroid_df.insert(0, "cluster", np.arange(len(centroid_df)))
+    centroid_df.to_csv(os.path.join(group_out_dir, "abs_cluster_centroids_standardized.csv"), index=False)
 
-        labels, kmeans, scaler, X_used = run_kmeans(
-            X, n_clusters=k, seed=42, standardize=standardize_for_kmeans
-        )
+    plot_title = "PCA Cluster Visualisation (MOSEI)" if dataset == "mosei" else "PCA Cluster Visualisation (CHSIMS)"
+    # Scatter plots use the same Xs used for clustering
+    plot_cluster_scatter(
+        Xs=Xs,
+        cluster_labels=labels,
+        out_dir=group_out_dir,
+        title_suffix=plot_title,
+        try_tsne=True,
+    )
 
-        # Save artifacts
-        df_clustered, summary_df = save_cluster_artifacts(
-            df_clustered=wide_df,
-            methods=methods,
-            labels=labels,
-            group_out_dir=group_out_dir,
-            prefix=cluster_mode,
-        )    
-
-        # Save method-level aggregate stats (for this aligned subset)
-        method_stats = []
-        for m in methods:
-            vals = wide_df[m].to_numpy(dtype=np.float32)
-            method_stats.append(
-                {
-                    "method": m,
-                    f"{cluster_mode}_feature_mean": float(np.mean(vals)),
-                    f"{cluster_mode}_feature_std": float(np.std(vals)),
-                    f"{cluster_mode}_feature_median": float(np.median(vals)),
-                }
-            )
-        pd.DataFrame(method_stats).sort_values(f"{cluster_mode}_feature_mean").to_csv(
-            os.path.join(group_out_dir, f"{cluster_mode}_method_feature_stats.csv"),
-            index=False,
-        )
-
-        # Save centroid matrix in original feature space if standardized
-        if scaler is not None:
-            centroids_orig = scaler.inverse_transform(kmeans.cluster_centers_)
-        else:
-            centroids_orig = kmeans.cluster_centers_
-
-        centroid_df = pd.DataFrame(centroids_orig, columns=methods)
-        centroid_df.insert(0, "cluster", np.arange(len(centroid_df)))
-        centroid_df.to_csv(os.path.join(group_out_dir, f"{cluster_mode}_cluster_centroids.csv"), index=False)
-
-        # Plot scatter using the same matrix used for clustering (standardized if applicable)
-        plot_cluster_scatter(
-            X=X_used,
-            cluster_labels=labels,
-            out_dir=group_out_dir,
-            prefix=cluster_mode,
-            title_suffix="PCA Cluster Visualisation (MOSEI)",
-            try_tsne=True,
-        )
-
-    
-        print(f"  [done] Saved outputs to {group_out_dir}")
-        print(f"  [clusters] sizes:\n{summary_df[['cluster', 'size', 'pct']].to_string(index=False)}")
+    print(f"  [done] Saved outputs to {group_out_dir}")
+    print(f"  [clusters] sizes:\n{summary_df[['cluster', 'size', 'pct']].to_string(index=False)}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Cluster utterances by multimodal model error patterns.")
+    parser = argparse.ArgumentParser(description="ABS-ONLY: cluster utterances by multimodal model absolute error patterns.")
     parser.add_argument("--root", type=str, required=True,
-                        help="Root directory to scan. Can be /hpctmp/scratch/e0968015 or .../mosei/FusionRuns")
+                        help="Root directory to scan (e.g. /hpctmp/scratch/e0968015 or .../FusionRuns)")
     parser.add_argument("--out-dir", type=str, required=True,
                         help="Output directory for clustering artefacts")
     parser.add_argument("--run-suffix", type=str, default="run3",
-                        help="Only include folders ending with _<run-suffix>, e.g. run3")
+                        help="Only include folders ending with _<run-suffix> (default: run3)")
     parser.add_argument("--dataset", type=str, default=None, choices=[None, "mosei", "chsims"],
                         help="Optional dataset filter")
     parser.add_argument("--audio-dim", type=int, default=None, choices=[16, 35],
                         help="Optional audio dim filter (best-effort from path naming)")
-    parser.add_argument("--mode", type=str, default="both", choices=["abs", "signed", "both"],
-                        help="Cluster on absolute errors, signed errors, or both")
     parser.add_argument("--n-clusters", type=int, default=5,
-                        help="K for KMeans (adjusted automatically if too large)")
+                        help="K for KMeans (your chosen final K)")
+    parser.add_argument("--elbow-k-max", type=int, default=12,
+                        help="Max K to plot in elbow curve (min is 2). Will be capped at N-1.")
     parser.add_argument("--allow-missing-methods", action="store_true",
                         help="If set, keep utterances with missing methods (median-fill); else drop incomplete rows")
     parser.add_argument("--no-standardize", action="store_true",
-                        help="Disable feature standardization before KMeans")
+                        help="Disable feature standardization before KMeans (not recommended)")
     args = parser.parse_args()
 
     os.makedirs(args.out_dir, exist_ok=True)
@@ -683,19 +657,21 @@ def main():
         audio_dim_filter=args.audio_dim,
     )
     print(f"[scan] Found {len(pred_files)} files")
-    for p in pred_files:
+    for p in pred_files[:50]:
         print(f"  - {p}")
+    if len(pred_files) > 50:
+        print("  ...")
 
     if not pred_files:
         raise SystemExit("No prediction JSONs found. Check --root / --run-suffix / filters.")
 
     all_df = combine_all_predictions(pred_files)
 
-    # Apply stronger filtering after load (audio dim may only be inferable after opening JSON)
+    # Stronger filtering after load
     if args.dataset is not None:
         all_df = all_df[all_df["dataset"].str.lower() == args.dataset.lower()].copy()
+
     if args.audio_dim is not None:
-        # keep only exact matches if inferred; if unknown exists, drop unless no exact labels exist
         target = str(args.audio_dim)
         if (all_df["audio_dim"] == target).any():
             all_df = all_df[all_df["audio_dim"] == target].copy()
@@ -705,21 +681,20 @@ def main():
     if all_df.empty:
         raise SystemExit("No rows remain after filtering.")
 
-    # Group by dataset/audio_dim (works with one group too)
     grouped = all_df.groupby(["dataset", "audio_dim"], dropna=False)
 
     for group_key, group_df in grouped:
-        analyse_group(
+        analyse_group_abs(
             group_df=group_df.copy(),
             group_key=group_key,
             out_root=args.out_dir,
             n_clusters=args.n_clusters,
-            mode=args.mode,
             require_all_methods=not args.allow_missing_methods,
             standardize_for_kmeans=not args.no_standardize,
+            elbow_k_max=args.elbow_k_max,
         )
 
-    print("\n[done] Clustering analysis complete.")
+    print("\n[done] ABS clustering analysis complete.")
 
 
 if __name__ == "__main__":

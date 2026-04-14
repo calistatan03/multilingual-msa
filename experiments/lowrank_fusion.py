@@ -136,6 +136,55 @@ class LowRankFusionSystem(nn.Module):
         ones = torch.ones(x.size(0), 1, device=x.device, dtype=x.dtype)
         return torch.cat([ones, x], dim=1)
 
+    def forward_features(
+        self,
+        text_features: torch.Tensor,
+        audio_features: torch.Tensor,
+        vision_features: torch.Tensor,
+        audio_length: torch.Tensor,
+        vision_length: torch.Tensor,
+    ):
+        # 1) Encode each modality -> (B, d_model)
+        t = self.text_enc(text_features)
+        a = self.audio_enc(audio_features, audio_length)
+        v = self.vision_enc(vision_features, vision_length)
+
+        if self.l2norm_before_fusion:
+            t = F.normalize(t, dim=-1)
+            a = F.normalize(a, dim=-1)
+            v = F.normalize(v, dim=-1)
+
+        # 2) Bottleneck
+        t_h = self.text_subnet(t)
+        a_h = self.audio_subnet(a)
+        v_h = self.vision_subnet(v)
+
+        # 3) Append ones
+        _t = self._prepend_ones(t_h)
+        _a = self._prepend_ones(a_h)
+        _v = self._prepend_ones(v_h)
+
+        # 4) Low-rank fusion
+        fa = torch.matmul(_a, self.audio_factor)
+        fv = torch.matmul(_v, self.vision_factor)
+        ft = torch.matmul(_t, self.text_factor)
+
+        f_rank = fa * fv * ft
+ 
+        fused = torch.matmul(
+            self.fusion_weights, f_rank.permute(1, 0, 2)
+        ).squeeze(0) + self.fusion_bias
+   
+        if fused.dim() == 3:
+            if fused.size(1) == 1:
+                fused = fused.squeeze(1)
+            else:
+                fused = fused.reshape(fused.size(0), -1)
+        elif fused.dim() == 1:
+            fused = fused.unsqueeze(1)
+
+        return fused
+
     def forward(
         self,
         text_features: torch.Tensor,
